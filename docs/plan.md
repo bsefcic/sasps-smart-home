@@ -46,6 +46,6 @@ Tracker: [Sprint 1 — #1](https://github.com/bsefcic/sasps-smart-home/issues/1)
 | [#10](https://github.com/bsefcic/sasps-smart-home/issues/10) | Onboarding de pe o clonă nouă și verificarea CI                     | Comun — review rotativ | 1–2 h    | Bootstrap       |
 | [#11](https://github.com/bsefcic/sasps-smart-home/issues/11) | Demo integrat și nota de progres pentru prezentarea din săptămâna 8 | Comun — toți patru     | 2–3 h    | #7, #8, #9, #10 |
 
-Ordine recomandată: onboarding-ul #10 poate începe imediat după bootstrap; #2 deblochează dezvoltarea. #3 → #4 → #5 formează primul flux. #6, #8 și #9 se pot suprapune după #5; CLI-ul #7 urmează după #6. Demo-ul #11 închide sprintul. Înainte ca dependențele să fie integrate, se pot pregăti specificații/test cases, fără implementări paralele incompatibile ale aceluiași contract.
+Ordine recomandată: onboarding-ul #10 poate începe imediat după bootstrap; #2 deblochează dezvoltarea. #3 → #4 → #5 formează primul flux. #6 și #9 se pot suprapune după #5; CLI-ul #7 și completarea suitei #8 urmează după #6. Demo-ul #11 închide sprintul. Înainte ca dependențele să fie integrate, se pot pregăti specificații/test cases, fără implementări paralele incompatibile ale aceluiași contract.
 
 GitHub Issues sunt sursa statusului. Acest document nu pretinde existența unui GitHub Project sau milestone configurat. Până la configurarea lor, prefixul `[S1]`, indexul și dependențele din issues țin backlog-ul navigabil.
