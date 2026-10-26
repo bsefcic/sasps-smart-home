@@ -1,121 +1,83 @@
 # Smart Home — Design Patterns Comparative Study
 
-Proiect pentru disciplina **Stiluri arhitecturale și șabloane de proiectare software (SASPS)**.
+Proiect SASPS: simulator de casă inteligentă, dezvoltat de patru persoane în **TypeScript**, în două variante echivalente funcțional:
 
-## Scop
+- **Baseline:** control centralizat și apeluri directe.
+- **Patterns:** responsabilități separate, cu patterns justificate de problemă.
 
-Dezvoltarea unui simulator de casă inteligentă în două variante echivalente funcțional:
+Comparăm extensibilitatea, complexitatea, corectitudinea și costul la execuție. Ulterior evaluăm implementarea acelorași features de către același agent AI, în condiții controlate. Nu presupunem că varianta cu patterns câștigă la toate metricile.
 
-- **Baseline:** implementare cu logică centralizată, condiționale și dependențe directe.
-- **Patterns:** implementare care utilizează design patterns justificate de problemele aplicației.
+## Quick start
 
-Proiectul urmărește compararea impactului acestor abordări asupra extensibilității, complexității, testabilității și performanței.
+Necesită **Node.js 24** și npm. Versiunea majoră este în `.nvmrc`; poți folosi `nvm install` / `nvm use` dacă ai nvm. Pe Windows, instalează Node 24 prin managerul preferat. Nu sunt necesare API keys, hardware, Docker sau baze de date.
 
-O componentă experimentală va analiza implementarea acelorași funcționalități noi de către același model AI în ambele variante.
+```sh
+git clone https://github.com/bsefcic/sasps-smart-home.git
+cd sasps-smart-home
+npm ci
+npm run check
+npm run demo -- baseline
+npm run demo -- patterns
+```
 
-## Domeniul aplicației
+Starterul pornește un bec simulat, `living-light`, și afișează rezultatul în JSON. Ambele variante trebuie să producă același output. Un argument de variantă necunoscut este respins cu exit code nenul.
 
-Sistemul permite controlul unor dispozitive simulate și definirea unor automatizări pentru o casă inteligentă.
+## Comenzi
 
-Nu este necesar hardware fizic. Interacțiunea se realizează prin CLI sau API.
+| Comandă                    | Rol                                              |
+| -------------------------- | ------------------------------------------------ |
+| `npm run demo -- baseline` | Rulează exemplul baseline                        |
+| `npm run demo -- patterns` | Rulează exemplul cu Command și Adapter           |
+| `npm test`                 | Teste comune prin test runner-ul Node            |
+| `npm run typecheck`        | Verificarea strictă a tipurilor                  |
+| `npm run lint`             | ESLint                                           |
+| `npm run format`           | Formatare                                        |
+| `npm run check`            | Typecheck, lint, teste și verificarea formatării |
 
-### Funcționalități planificate
+Node execută direct TypeScript cu sintaxă erasable; verificarea tipurilor este separată. Nu există încă un build de producție sau un parser general de scenarii.
 
-- Înregistrarea și controlul dispozitivelor:
-  - becuri;
-  - termostate;
-  - jaluzele;
-  - încuietori.
-- Simularea senzorilor de temperatură și mișcare.
-- Executarea comenzilor individuale.
-- Definirea și executarea scenariilor, precum „Plec de acasă”.
-- Gruparea comenzilor și includerea scenariilor în alte scenarii.
-- Declanșarea automatizărilor pe baza evenimentelor senzorilor.
-- Alegerea unor politici de control al temperaturii.
-- Integrarea unor API-uri simulate de producători diferiți.
+## Structura repository-ului
 
-## Design patterns vizate
+| Director                   | Responsabilitate                                        |
+| -------------------------- | ------------------------------------------------------- |
+| `implementations/baseline` | Implementarea directă, funcțională și plauzibilă        |
+| `implementations/patterns` | Implementarea cu patterns                               |
+| `shared/contracts`         | Contracte și DTO-uri comune, fără logica comparată      |
+| `shared/simulators`        | API-uri fictive de producători                          |
+| `tests/acceptance`         | Aceleași teste pentru ambele variante                   |
+| `tests/fixtures`           | Inputuri sintetice pentru CLI, de adăugat în S1         |
+| `scripts`                  | Puncte de intrare și utilitare                          |
+| `benchmarks`               | Metodologie și scripturi de măsurare, planificate în S1 |
+| `experiments`              | Experimente AI, planificate în S2–S3                    |
+| `docs`                     | Scope, arhitectură, plan și protocol de evaluare        |
+| `.github`                  | CI și template-uri de colaborare                        |
 
-| Pattern | Utilizare |
-|---|---|
-| Command | Încapsularea și executarea acțiunilor asupra dispozitivelor |
-| Composite | Construirea scenariilor din comenzi și alte scenarii |
-| Adapter | Uniformizarea interfețelor diferiților producători |
-| Observer | Notificarea automatizărilor la schimbarea valorilor senzorilor |
-| Strategy | Alegerea politicilor de control al temperaturii |
+## Ce este implementat
 
-Patterns suplimentare, precum State sau Decorator, pot fi introduse dacă funcționalitățile implementate le justifică.
+- Setup TypeScript strict, lint, formatter și CI.
+- Un bec și un producător simulat.
+- Control on/off în ambele variante; Command și Adapter în varianta patterns.
+- Teste comune pentru control, dispozitiv necunoscut și izolarea stării.
 
-## Metodologia comparației
+## Ce urmează
 
-Cele două variante vor utiliza:
+Sprint 1 adaugă termostatul, validarea inputului, scenarii plate, CLI pe fișiere și măsurători inițiale. Sprint 2 urmărește integrarea celui de-al doilea producător, scenarii imbricate, senzori, Observer și Strategy. Nu există încă rezultate de benchmark sau experimente AI.
 
-- aceleași cerințe funcționale și reguli de validare;
-- același limbaj și aceeași infrastructură relevantă;
-- aceleași date și scenarii de test;
-- aceleași teste de acceptanță;
-- condiții comparabile pentru măsurarea performanței.
+Extensii precum State, Decorator, undo și dashboard sunt opționale. Scope-ul obligatoriu nu include integrări reale sau infrastructură distribuită.
 
-Varianta baseline trebuie să fie funcțională și plauzibilă. Problemele de proiectare și anti-pattern-urile analizate vor fi identificate explicit.
+## Începe un task
 
-Nu presupunem că utilizarea design patterns îmbunătățește toate metricile.
+1. Citește [planul și backlog-ul Sprint 1](docs/plan.md), apoi [scope-ul](docs/scope.md).
+2. Alege un issue ale cărui dependențe sunt integrate și anunță că îl preiei. Membrii și assignees se adaugă ulterior.
+3. Urmează [CONTRIBUTING.md](CONTRIBUTING.md): branch separat, verificări și review de la un coleg.
+4. Pentru AI citește [AGENTS.md](AGENTS.md) și [workflow-ul AI](docs/ai-workflow.md).
 
-## Metrici urmărite
+## Evaluare și documentație
 
-### Structura codului
+- [Arhitectură și decizii](docs/architecture.md)
+- [Metodologia comparației și experimentul AI](docs/evaluation.md)
+- [Planul celor trei sprinturi](docs/plan.md)
 
-- Număr de linii de cod.
-- Complexitate ciclomatică.
-- Dependențe între module.
-- Distribuția responsabilităților.
+Metrici vizate: LOC și complexitate, suprafața schimbărilor, regresii, durată de execuție și, unde metoda permite, memorie. În experimentul AI: timp până la trecerea testelor, tokeni real raportați, încercări și rezultate incomplete. Testele externe sunt protejate prin izolare, nu doar prin instrucțiuni.
 
-Codul aplicației, testele și codul generat vor fi raportate separat.
-
-### Extensibilitate și corectitudine
-
-- Fișiere modificate pentru o funcționalitate nouă.
-- Linii adăugate și șterse.
-- Regresii introduse.
-- Rezultatele testelor de acceptanță.
-
-### Execuție
-
-- Timp de execuție pentru scenarii identice.
-- Consum de memorie.
-- Overhead introdus de abstracții.
-
-## Experimentul cu AI
-
-Același model AI va primi aceeași cerință de extindere pentru fiecare variantă, în sesiuni independente.
-
-Vom păstra comparabile instrucțiunile, instrumentele și bugetele de execuție. Fiecare rulare va porni de la versiunea inițială stabilită.
-
-Vom înregistra:
-
-- timpul până la trecerea testelor de acceptanță;
-- tokenii de input și output;
-- numărul de încercări;
-- fișierele și liniile modificate;
-- testele trecute și regresiile;
-- eventualele rulări incomplete.
-
-Exemple de extensii:
-
-- integrarea unui producător nou;
-- adăugarea unei politici de temperatură;
-- introducerea unui nou consumator al evenimentelor;
-- implementarea anulării comenzilor reversibile.
-
-Testele de acceptanță vor fi stabilite înaintea experimentului și protejate împotriva modificării de către agent.
-
-## Livrabile
-
-- Cele două implementări.
-- Teste comune de acceptanță.
-- Scenarii și scripturi de evaluare.
-- Rezultatele experimentelor.
-- Raport comparativ și demonstrație.
-
-## Stadiu
-
-Proiectul se află în etapa de definire a cerințelor și arhitecturii. Funcționalitățile și experimentele descrise sunt planificate.
+Raportul va urma structura din materialele profesorului: introducere, metodologie, analiza modelelor, eficiență și optimizare, studiu comparativ, impactul anti-pattern-urilor, concluzii și bibliografie.
