@@ -1,5 +1,5 @@
 # Patterns implementation
 
-Follow the root instructions. Use patterns only where the issue and problem justify them: Command (actions), Adapter (vendor APIs), Composite (scenes), Observer (sensor events), Strategy (temperature policies). The bootstrap implements only one light, Adapter, and Command; the others are planned.
+Follow the root instructions. Use patterns where justified: Command for actions, Adapter for vendor APIs, Composite for scenes, Observer for sensor events, Strategy for temperature policies. Only Command, Adapter, and one light exist in the bootstrap.
 
-Prefer explicit dependencies supplied through constructors/functions. Keep abstractions small. Do not add singleton registries, a framework, a database, or speculative patterns. No imports from `implementations/baseline`. Preserve the common contract and semantics.
+Prefer small Java interfaces, explicit constructors, and immutable request/snapshot records. The public HomeCommand record hierarchy is a request format; executable Command objects are separate. Avoid global registries, singleton state, frameworks, and speculative abstraction. Do not import or depend on smart-home-baseline. Preserve public semantics and run the common acceptance tests from the repository root.

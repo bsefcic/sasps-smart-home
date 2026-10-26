@@ -11,13 +11,26 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['17', '21']
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-java@v4
         with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run check
-      - run: npm run demo -- baseline
-      - run: npm run demo -- patterns
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Build, tests and format check
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+      - name: Run both starter demos
+        run: |
+          java -jar app/target/smart-home.jar baseline > baseline.json
+          java -jar app/target/smart-home.jar patterns > patterns.json
+          diff baseline.json patterns.json
+      - name: Reject invalid variant
+        run: |
+          if java -jar app/target/smart-home.jar invalid; then
+            echo "Invalid variant must fail"
+            exit 1
+          fi

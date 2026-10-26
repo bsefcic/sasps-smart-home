@@ -11,7 +11,7 @@ Closes #
 ## Verificări
 
 - [ ] Criteriile issue-ului sunt acoperite
-- [ ] `npm run check`
+- [ ] `./mvnw clean verify`
 - [ ] Demo/fixtures relevante
 - [ ] Comportamentul public rămâne echivalent
 - [ ] Documentație actualizată

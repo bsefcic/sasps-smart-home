@@ -1,5 +1,5 @@
 # Baseline implementation
 
-Follow the root instructions. Use straightforward centralized control flow and direct calls to neutral vendor simulators. Keep it readable, correct, and testable. Normal functions, maps, types, and necessary validation are allowed. Do not deliberately duplicate code, introduce defects, add delays, or inflate complexity. Do not refactor this variant into the patterns architecture. No imports from `implementations/patterns`.
+Follow the root instructions. Implement correct Java behavior with straightforward centralized control flow and direct calls to vendor simulators. Ordinary methods, maps, records, validation, and the public SmartHome interface are allowed. Do not deliberately duplicate code, add defects or delays, or transform this variant into the patterns architecture.
 
-For stories affecting both variants, implement the same public behavior here and run the common acceptance suite. Document actual coupling or maintenance costs instead of assuming every conditional is an anti-pattern.
+Do not import or declare a dependency on smart-home-patterns. Shared modules contain only contracts and neutral simulators. For stories affecting both variants, preserve common behavior and run the common acceptance suite from the repository root. Document actual coupling or maintenance costs rather than labelling every conditional an anti-pattern.

@@ -1,83 +1,105 @@
 # Smart Home — Design Patterns Comparative Study
 
-Proiect SASPS: simulator de casă inteligentă, dezvoltat de patru persoane în **TypeScript**, în două variante echivalente funcțional:
+Proiect SASPS: simulator de casă inteligentă, dezvoltat de patru persoane în **Java**, în două variante echivalente funcțional:
 
 - **Baseline:** control centralizat și apeluri directe.
-- **Patterns:** responsabilități separate, cu patterns justificate de problemă.
+- **Patterns:** responsabilități separate și patterns justificate.
 
-Comparăm extensibilitatea, complexitatea, corectitudinea și costul la execuție. Ulterior evaluăm implementarea acelorași features de către același agent AI, în condiții controlate. Nu presupunem că varianta cu patterns câștigă la toate metricile.
+Comparăm extensibilitatea, complexitatea, corectitudinea și costul la execuție. Ulterior evaluăm implementarea acelorași features de către același agent AI, în condiții controlate. Nu presupunem un câștigător.
 
 ## Quick start
 
-Necesită **Node.js 24** și npm. Versiunea majoră este în `.nvmrc`; poți folosi `nvm install` / `nvm use` dacă ai nvm. Pe Windows, instalează Node 24 prin managerul preferat. Nu sunt necesare API keys, hardware, Docker sau baze de date.
+Necesită **JDK 17+**. Verifică `java -version`; configurează `JAVA_HOME` către JDK dacă este necesar. Maven Wrapper descarcă versiunea 3.9.11 și dependențele la prima rulare, deci este necesar acces la internet. Maven nu trebuie instalat separat.
+
+### macOS / Linux
 
 ```sh
 git clone https://github.com/bsefcic/sasps-smart-home.git
 cd sasps-smart-home
-npm ci
-npm run check
-npm run demo -- baseline
-npm run demo -- patterns
+./mvnw clean verify
+java -jar app/target/smart-home.jar baseline
+java -jar app/target/smart-home.jar patterns
 ```
 
-Starterul pornește un bec simulat, `living-light`, și afișează rezultatul în JSON. Ambele variante trebuie să producă același output. Un argument de variantă necunoscut este respins cu exit code nenul.
+### Windows PowerShell
 
-## Comenzi
+```powershell
+git clone https://github.com/bsefcic/sasps-smart-home.git
+cd sasps-smart-home
+.\mvnw.cmd clean verify
+java -jar app/target/smart-home.jar baseline
+java -jar app/target/smart-home.jar patterns
+```
 
-| Comandă                    | Rol                                              |
-| -------------------------- | ------------------------------------------------ |
-| `npm run demo -- baseline` | Rulează exemplul baseline                        |
-| `npm run demo -- patterns` | Rulează exemplul cu Command și Adapter           |
-| `npm test`                 | Teste comune prin test runner-ul Node            |
-| `npm run typecheck`        | Verificarea strictă a tipurilor                  |
-| `npm run lint`             | ESLint                                           |
-| `npm run format`           | Formatare                                        |
-| `npm run check`            | Typecheck, lint, teste și verificarea formatării |
+În IDE importă `pom.xml` din rădăcină ca proiect Maven. Nu sunt necesare Spring, hardware, Docker, baze de date sau chei API. Comenzile presupun integrarea bootstrap-ului Java în main; înainte de integrare, folosește branch-ul PR-ului Java.
 
-Node execută direct TypeScript cu sintaxă erasable; verificarea tipurilor este separată. Nu există încă un build de producție sau un parser general de scenarii.
+## Ce arată demo-ul
+
+Ambele variante pornesc becul simulat `living-light` și afișează același JSON:
+
+```json
+{"result":{"ok":true},"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true}]}}
+```
+
+O variantă necunoscută produce exit code nenul. Acesta este un demo fix, nu un parser general de scenarii JSON. CLI-ul complet este un task din Sprint 1.
+
+## Comenzi uzuale
+
+| Comandă macOS/Linux | Rol |
+| --- | --- |
+| `./mvnw clean verify` | Compilare strictă, teste JUnit, JAR și verificarea formatării Java |
+| `./mvnw test` | Compilare și teste, fără toate verificările din verify |
+| `./mvnw spotless:apply` | Formatare automată Java |
+| `./mvnw spotless:check` | Verifică formatarea fără modificări |
+| `java -jar app/target/smart-home.jar baseline` | Demo baseline, după build |
+| `java -jar app/target/smart-home.jar patterns` | Demo patterns, după build |
+
+Pe Windows înlocuiește `./mvnw` cu `.\mvnw.cmd`. Rulează comenzile Maven din rădăcină: reactorul construiește modulele în ordinea dependențelor. CI verifică JDK 17 și 21. Versiunile dependențelor directe și pluginurilor sunt stabilite în POM; nu există un lockfile tranzitiv complet.
 
 ## Structura repository-ului
 
-| Director                   | Responsabilitate                                        |
-| -------------------------- | ------------------------------------------------------- |
-| `implementations/baseline` | Implementarea directă, funcțională și plauzibilă        |
-| `implementations/patterns` | Implementarea cu patterns                               |
-| `shared/contracts`         | Contracte și DTO-uri comune, fără logica comparată      |
-| `shared/simulators`        | API-uri fictive de producători                          |
-| `tests/acceptance`         | Aceleași teste pentru ambele variante                   |
-| `tests/fixtures`           | Inputuri sintetice pentru CLI, de adăugat în S1         |
-| `scripts`                  | Puncte de intrare și utilitare                          |
-| `benchmarks`               | Metodologie și scripturi de măsurare, planificate în S1 |
-| `experiments`              | Experimente AI, planificate în S2–S3                    |
-| `docs`                     | Scope, arhitectură, plan și protocol de evaluare        |
-| `.github`                  | CI și template-uri de colaborare                        |
+| Director / modul Maven | Responsabilitate |
+| --- | --- |
+| `shared/contracts` | Interfețe și records comune, fără motorul comparat |
+| `shared/simulators` | API fictiv al producătorului |
+| `implementations/baseline` | Control direct, corect și plauzibil |
+| `implementations/patterns` | Implementarea cu patterns |
+| `app` | CLI și JAR executabil |
+| `acceptance-tests` | Aceleași teste JUnit pentru ambele variante |
+| `benchmarks` | Metodologie și scripturi de măsurare planificate |
+| `experiments` | Experimente AI planificate pentru S2–S3 |
+| `docs` | Scope, arhitectură, plan și protocolul evaluării |
+| `.github` | CI și template-uri de colaborare |
 
-## Ce este implementat
+Fiecare modul folosește directoarele Java standard `src/main/java` și `src/test/java`. Fișierele JSON comune se adaugă în `acceptance-tests/src/test/resources/fixtures`.
 
-- Setup TypeScript strict, lint, formatter și CI.
+## Implementat în bootstrap
+
+- Java 17+, Maven Wrapper și proiect modular, fără framework runtime.
 - Un bec și un producător simulat.
-- Control on/off în ambele variante; Command și Adapter în varianta patterns.
-- Teste comune pentru control, dispozitiv necunoscut și izolarea stării.
+- Control on/off în ambele variante; Command și Adapter în patterns.
+- Records imuabile pentru snapshots și teste comune pentru control, erori și izolarea stării.
+- Teste CLI, formatare Java și CI.
 
 ## Ce urmează
 
-Sprint 1 adaugă termostatul, validarea inputului, scenarii plate, CLI pe fișiere și măsurători inițiale. Sprint 2 urmărește integrarea celui de-al doilea producător, scenarii imbricate, senzori, Observer și Strategy. Nu există încă rezultate de benchmark sau experimente AI.
+S1 adaugă termostatul, validarea inputului, scenarii plate, CLI pentru fișiere și primele măsurători. S2 urmărește al doilea producător, scenarii imbricate, senzori, Observer și Strategy. Nu există încă rezultate de benchmark sau experimente AI.
 
-Extensii precum State, Decorator, undo și dashboard sunt opționale. Scope-ul obligatoriu nu include integrări reale sau infrastructură distribuită.
+State, Decorator, undo, încuietori, jaluzele și dashboard rămân opționale. Nu sunt necesare integrări reale sau infrastructură distribuită.
 
 ## Începe un task
 
-1. Citește [planul și backlog-ul Sprint 1](docs/plan.md), apoi [scope-ul](docs/scope.md).
-2. Alege un issue ale cărui dependențe sunt integrate și anunță că îl preiei. Membrii și assignees se adaugă ulterior.
-3. Urmează [CONTRIBUTING.md](CONTRIBUTING.md): branch separat, verificări și review de la un coleg.
-4. Pentru AI citește [AGENTS.md](AGENTS.md) și [workflow-ul AI](docs/ai-workflow.md).
+1. Citește [planul și backlog-ul](docs/plan.md), apoi [scope-ul](docs/scope.md).
+2. Alege un issue cu dependențele integrate și anunță că îl preiei. Membrii se atribuie ulterior.
+3. Urmează [CONTRIBUTING.md](CONTRIBUTING.md): branch, verificări și review de la alt coleg.
+4. Pentru AI citește [AGENTS.md](AGENTS.md), instrucțiunile locale și [workflow-ul AI](docs/ai-workflow.md).
 
 ## Evaluare și documentație
 
 - [Arhitectură și decizii](docs/architecture.md)
-- [Metodologia comparației și experimentul AI](docs/evaluation.md)
-- [Planul celor trei sprinturi](docs/plan.md)
+- [Metodologie și experiment AI](docs/evaluation.md)
+- [Planul sprinturilor](docs/plan.md)
 
-Metrici vizate: LOC și complexitate, suprafața schimbărilor, regresii, durată de execuție și, unde metoda permite, memorie. În experimentul AI: timp până la trecerea testelor, tokeni real raportați, încercări și rezultate incomplete. Testele externe sunt protejate prin izolare, nu doar prin instrucțiuni.
+Metrici: LOC, complexitate, modificări, regresii, execuție și, unde metoda permite, memorie. AI: timp până la trecerea testelor, tokeni real raportați, încercări și rezultate incomplete. Evaluatorul extern este protejat prin izolare, nu doar prin instrucțiuni.
 
-Raportul va urma structura din materialele profesorului: introducere, metodologie, analiza modelelor, eficiență și optimizare, studiu comparativ, impactul anti-pattern-urilor, concluzii și bibliografie.
+Raportul urmează structura din materialele profesorului: introducere, metodologie, analiza modelelor, eficiență și optimizare, studiu comparativ, impactul anti-pattern-urilor, concluzii și bibliografie.

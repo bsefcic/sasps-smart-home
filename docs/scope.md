@@ -2,11 +2,11 @@
 
 ## Context
 
-Echipă de patru persoane; TypeScript; simulator local, controlabil prin CLI. Obiectivul este studiul comparativ, nu integrarea unei case reale. Patterns nu sunt presupuse superioare la toate metricile. Nu există un număr minim de patterns dedus din cerințele profesorului.
+Echipă de patru persoane; Java; simulator local, controlabil prin CLI. Obiectivul este studiul comparativ, nu integrarea unei case reale. Patterns nu sunt presupuse superioare la toate metricile. Nu există un număr minim de patterns dedus din cerințele profesorului.
 
 ## Ce există în bootstrap
 
-`createHome()` construiește o instanță independentă cu becul `living-light`, inițial oprit. `execute({ type: 'set-light-power', deviceId, power })` setează starea, iar `getSnapshot()` întoarce o copie. Un ID necunoscut produce `UNKNOWN_DEVICE` fără efecte. Setarea repetată la aceeași valoare este permisă. Contractul v0 este tipizat; starterul nu este încă un parser pentru input JSON arbitrar.
+`new BaselineHome()` sau `new PatternsHome()` construiește o instanță independentă cu becul `living-light`, inițial oprit. `execute(new SetLightPower(deviceId, power))` setează starea, iar `getSnapshot()` întoarce o stare imuabilă. Un ID necunoscut produce `UNKNOWN_DEVICE` fără efecte. Setarea repetată la aceeași valoare este permisă. Contractul v0 este Java; starterul nu este încă un parser pentru input JSON arbitrar.
 
 ## Sprint 1: obligatoriu pentru prezentarea din 16 noiembrie 2026
 

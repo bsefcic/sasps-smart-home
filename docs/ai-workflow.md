@@ -6,7 +6,7 @@ Orice coleg poate folosi instrumentul preferat. Issue-ul și documentele repo-ul
 
 Prompt de pornire:
 
-> Citește AGENTS.md, instrucțiunile locale, docs/scope.md și issue-ul indicat. Explică pe scurt planul, implementează numai criteriile de acceptanță, păstrează echivalența variantelor și rulează npm run check. Nu modifica reguli sau teste pentru a ascunde defecte. Raportează schimbările, comenzile rulate și limitele rămase.
+> Citește AGENTS.md, instrucțiunile locale, docs/scope.md și issue-ul indicat. Explică pe scurt planul, implementează numai criteriile de acceptanță, păstrează echivalența variantelor și rulează ./mvnw clean verify. Nu modifica reguli sau teste pentru a ascunde defecte. Raportează schimbările, comenzile rulate și limitele rămase.
 
 - Începe dintr-un branch actualizat și lucrează la un singur issue.
 - Atașează criteriile și dependențele, nu tot istoricul conversațiilor.

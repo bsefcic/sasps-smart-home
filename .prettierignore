@@ -1,6 +1,0 @@
-node_modules/
-dist/
-coverage/
-package-lock.json
-experiments/workspaces/
-benchmarks/output/

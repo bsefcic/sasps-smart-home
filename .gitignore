@@ -1,6 +1,4 @@
-node_modules/
-dist/
-coverage/
+**/target/
 .env
 .env.*
 !.env.example
@@ -8,5 +6,6 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+*.iml
 experiments/workspaces/
 benchmarks/output/

@@ -16,7 +16,7 @@ Aceleași cerințe, simulatoare, fixtures, comportamente și teste de acceptanț
 - Execuție: workload identic, instanțe resetate, warm-up și rulări repetate, fără console output în secțiunea cronometrată. Raportăm distribuții și mediul, nu un singur timp.
 - Memoria procesului nu reprezintă automat memoria exclusivă a variantei. Dacă o măsurăm, folosim procese separate și documentăm runtime-ul/GC și limitele metodei.
 
-Fiecare rezultat include commit SHA, comandă, data, OS/CPU, versiuni Node/npm, parametri, rezultate brute și un sumar. Nu versionăm volume mari de output sau secrete. Benchmark-ul complet și runner-ul AI sunt taskuri viitoare; bootstrap-ul nu publică rezultate.
+Fiecare rezultat include commit SHA, comandă, data, OS/CPU, versiuni JDK/Maven, parametri, rezultate brute și un sumar. Nu versionăm volume mari de output sau secrete. Benchmark-ul complet și runner-ul AI sunt taskuri viitoare; bootstrap-ul nu publică rezultate.
 
 ## Protocol AI propus (Sprint 2–3)
 
