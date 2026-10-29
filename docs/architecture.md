@@ -10,7 +10,7 @@ app păstrează demo-ul CLI opțional. acceptance-tests verifică engines direct
 
 ## Decizii
 
-1. Java 17+, Spring Boot 3.5.16 și Maven Wrapper 3.9.11. Spring BOM aliniază dependențele, inclusiv JUnit; pluginurile sunt versionate explicit. Fără preview, Lombok sau framework în engines.
+1. Java 21, Spring Boot 3.5.16 și Maven Wrapper 3.9.11. Spring BOM aliniază dependențele, inclusiv JUnit; pluginurile sunt versionate explicit. Fără preview, Lombok sau framework în engines.
 2. O singură implementare per proces, selectată la startup; pentru comparație rulează două procese pe porturi diferite. Niciun header/body nu schimbă varianta.
 3. HTTP parsing, strict shape și sincronizarea sunt infrastructură identică. Executarea/prevalidarea inventarului/scenariilor și politicile rămân separate în engines.
 4. Contract v1 fix: docs/contracts-v1.md și OpenAPI. NOT_IMPLEMENTED delimitează explicit features încă de implementat, nu substituie rezultatul final.

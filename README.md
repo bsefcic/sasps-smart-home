@@ -1,12 +1,12 @@
 # Smart Home — SASPS
 
-Simulator de casă inteligentă în **Java 17+ și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
+Simulator de casă inteligentă în **Java 21 și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
 
 **Contractele sunt deja decise.** Începe cu [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Primul task nu mai cere alegerea interfețelor.
 
 ## Pornire
 
-Instalează JDK 17 sau mai nou. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE.
+Instalează JDK 21 și configurează JAVA_HOME către el. Maven verifică folosirea JDK 21; compilarea țintește Java 21. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE și setează Project SDK și language level la 21.
 
 macOS/Linux:
 
@@ -26,7 +26,7 @@ cd sasps-smart-home
 java -jar server/target/smart-home-server.jar
 ```
 
-Înainte de integrarea PR-ului Spring în main, pornește din branch-ul său `feat/spring-web-contract-v1`. Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
+Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
 
 Pentru baseline, într-un al doilea terminal:
 
@@ -56,7 +56,7 @@ Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utili
 - Health, citirea stării și control on/off pentru becul living-light în ambele engines.
 - Command și Adapter în patterns; API direct în baseline.
 - Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
-- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 17 și 21.
+- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 21.
 
 **Funcționalități încă de implementat:** simulatorul/adaptorul de termostat, controlul lui în engines și scenariile plate sunt stories #3–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
 
@@ -90,7 +90,7 @@ Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-u
 1. Citește [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
 2. Urmează [CONTRIBUTING.md](CONTRIBUTING.md) și instrucțiunile [AGENTS.md](AGENTS.md), inclusiv cele locale.
 3. Implementează specificația fixată; nu mai există taskuri care cer să decideți contractele.
-4. Adaugă teste, rulează verificările și deschide un PR pentru review de la alt coleg.
+4. Adaugă teste, rulează verificările și deschide un PR pentru minimum două aprobări de la colegi diferiți de autor.
 
 ## Documentație
 

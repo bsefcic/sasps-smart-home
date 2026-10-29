@@ -1,6 +1,6 @@
 # Scope
 
-Echipă de patru, Java 17+, Spring Boot la granița HTTP. Aplicație web locală, cu un singur proces și o singură casă per server, fără hardware, DB, autentificare sau React în MVP.
+Echipă de patru, Java 21, Spring Boot la granița HTTP. Aplicație web locală, cu un singur proces și o singură casă per server, fără hardware, DB, autentificare sau React în MVP.
 
 ## Contractele sunt decise
 

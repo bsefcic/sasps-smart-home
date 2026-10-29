@@ -16,7 +16,7 @@
     <module>acceptance-tests</module>
   </modules>
   <properties>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>3.5.16</spring-boot.version>
@@ -86,7 +86,8 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>[17,)</version>
+                  <version>[21,22)</version>
+                  <message>Use JDK 21. Set JAVA_HOME and the IDE Project SDK to JDK 21.</message>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.9.11,4)</version>
