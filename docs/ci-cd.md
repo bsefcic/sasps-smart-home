@@ -4,12 +4,12 @@
 
 Workflow-ul [.github/workflows/ci.yml](../.github/workflows/ci.yml) rulează la PR către main, push pe main și manual din Actions.
 
-- Java 17 și 21: Maven clean verify, formatare și teste.
+- Java 21: Maven clean verify, formatare și teste.
 - Comparație între demo-urile celor două engines și refuzul unei variante CLI invalide.
 - Pornirea JAR-ului Spring, health și citirea stării prin HTTP. Testele Maven acoperă separat HTTP pe ambele engines.
 - Rapoarte Surefire și loguri de smoke test descărcabile, inclusiv la eșec, păstrate 14 zile.
-- La succesul jobului Java 17, JAR executabil, COMMIT.txt și checksum SHA-256 descărcabile ca artifact. Pentru o versiune validată, alegeți o rulare cu ambele joburi verzi; pentru ultima versiune integrată, rularea de pe main.
-- Timeout 15 minute/job; un PR actualizat anulează rularea sa anterioară. Ambele versiuni Java sunt verificate chiar dacă una eșuează.
+- La succesul jobului Java 21, JAR executabil, COMMIT.txt și checksum SHA-256 descărcabile ca artifact. Pentru o versiune validată, alegeți o rulare cu jobul check (21) verde; pentru ultima versiune integrată, rularea de pe main.
+- Timeout 15 minute/job; un PR actualizat anulează rularea sa anterioară.
 
 Din GitHub: Actions → CI → rulare → Artifacts → smart-home-server-.... Descărcați și extrageți arhiva, apoi:
 
@@ -29,14 +29,14 @@ Aceste instrucțiuni documentează setările; fișierele din repo nu activează 
 - Require a pull request before merging.
 - Required approvals: **2**. Autorul nu își aprobă propriul PR.
 - Dismiss stale pull request approvals when new commits are pushed.
-- Require status checks to pass before merging: **check (17)** și **check (21)**.
+- Require status checks to pass before merging: **check (21)**.
 - Require branches to be up to date before merging.
 - Require conversation resolution before merging.
 - Do not allow bypassing the above settings (inclusiv administratori).
 - Allow force pushes: dezactivat.
 - Allow deletions: dezactivat.
 
-Nu se schimbă politica de merge pentru celelalte branches. Un PR nou pentru main trebuie să aibă două aprobări actuale și ambele joburi verzi înainte de merge. Numele joburilor sunt păstrate intenționat; actualizați regula dacă vor fi redenumite.
+Nu se schimbă politica de merge pentru celelalte branches. Un PR nou pentru main trebuie să aibă două aprobări actuale și jobul check (21) verde înainte de merge. Numele jobului este stabil; actualizați regula dacă va fi redenumit.
 
 Starea efectivă a protecției se verifică în Settings; nu o deduceți din existența acestui document.
 

@@ -12,7 +12,7 @@ Data finală se confirmă cu calendarul oficial. Disponibilitatea și absențele
 
 ## Decizii deja luate
 
-Java 17+, Spring Boot 3.5.16 în server, Maven Wrapper, două engines independente și o interfață REST comună. [Contractul v1](contracts-v1.md) fixează endpoints, forme JSON, erori, inventar, scenarii și API Vendor A pentru întreg Sprintul 1. [Ghidul taskurilor](tasks-sprint-1.md) conține pași și rezultate, fără taskuri de «alegere a contractelor».
+Java 21, Spring Boot 3.5.16 în server, Maven Wrapper, două engines independente și o interfață REST comună. [Contractul v1](contracts-v1.md) fixează endpoints, forme JSON, erori, inventar, scenarii și API Vendor A pentru întreg Sprintul 1. [Ghidul taskurilor](tasks-sprint-1.md) conține pași și rezultate, fără taskuri de «alegere a contractelor».
 
 React rămâne opțional. Bootstrap-ul Spring livrează contractele și serverul cu bec funcțional; termostatul/scenariile valide sunt explicit 501 până la implementarea stories dedicate.
 

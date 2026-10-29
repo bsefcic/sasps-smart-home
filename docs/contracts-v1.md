@@ -4,7 +4,7 @@ Acesta este contractul comun baseline/patterns. Deciziile de mai jos sunt stabil
 
 ## Cum pornim serverele
 
-Java 17+, Maven Wrapper, Spring Boot 3.5.16. Build din rădăcină: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`).
+Java 21, Maven Wrapper, Spring Boot 3.5.16. Build din rădăcină: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`).
 
 ```sh
 java -jar server/target/smart-home-server.jar

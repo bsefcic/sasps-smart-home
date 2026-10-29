@@ -280,7 +280,7 @@ Un coleg diferit de autor verifică dacă poate porni serverul și lucra folosin
 Dintr-o clonă nouă: build, pornire patterns:8080, pornire baseline:8081, health/status și o comandă de bec pe fiecare.
 
 ### Pași concreți
-1. După merge-ul PR-ului Spring, clonează main într-un director nou și folosește JDK 17 sau 21.
+1. După merge-ul PR-ului Spring, clonează main într-un director nou și folosește JDK 21.
 2. Urmează README: wrapper clean verify, apoi java -jar server/target/smart-home-server.jar.
 3. Pornește al doilea proces cu --smart-home.variant=baseline --server.port=8081; rulează exemplele HTTP pentru bec și erori.
 4. Verifică documentele contract/taskuri/instrucțiuni AI și faptul că stadiul implementării este descris corect.

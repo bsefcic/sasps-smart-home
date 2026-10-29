@@ -1,12 +1,12 @@
 # Smart Home — SASPS
 
-Simulator de casă inteligentă în **Java 17+ și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
+Simulator de casă inteligentă în **Java 21 și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
 
 **Contractele sunt deja decise.** Începe cu [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Primul task nu mai cere alegerea interfețelor.
 
 ## Pornire
 
-Instalează JDK 17 sau mai nou. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE.
+Instalează JDK 21 și configurează JAVA_HOME către el. Maven verifică folosirea JDK 21; compilarea țintește Java 21. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE și setează Project SDK și language level la 21.
 
 macOS/Linux:
 
@@ -56,7 +56,7 @@ Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utili
 - Health, citirea stării și control on/off pentru becul living-light în ambele engines.
 - Command și Adapter în patterns; API direct în baseline.
 - Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
-- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 17 și 21.
+- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 21.
 
 **Funcționalități încă de implementat:** simulatorul/adaptorul de termostat, controlul lui în engines și scenariile plate sunt stories #3–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
 
