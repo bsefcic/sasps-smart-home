@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -11,7 +17,9 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         java: ['17', '21']
     steps:
@@ -47,3 +55,35 @@ jobs:
           done
           grep -q '"status":"UP"' health.json
           curl --fail --silent --max-time 5 http://127.0.0.1:18080/api/v1/home
+
+      - name: Archive test reports and smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-java-${{ matrix.java }}-${{ github.run_attempt }}
+          path: |
+            **/target/surefire-reports/
+            server.log
+            health.json
+            baseline.json
+            patterns.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Prepare server delivery
+        if: matrix.java == '17'
+        env:
+          BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          mkdir -p delivery
+          cp server/target/smart-home-server.jar delivery/
+          printf '%s\n' "$BUILD_COMMIT" > delivery/COMMIT.txt
+          cd delivery
+          sha256sum smart-home-server.jar > SHA256SUMS
+      - name: Archive runnable server
+        if: matrix.java == '17'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-home-server-${{ github.sha }}-${{ github.run_attempt }}
+          path: delivery/
+          if-no-files-found: error
+          retention-days: 14
