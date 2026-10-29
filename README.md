@@ -2,7 +2,7 @@
 
 Simulator de casă inteligentă în **Java 21 și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
 
-**Contractele sunt deja decise.** Începe cu [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Primul task nu mai cere alegerea interfețelor.
+**Nou în echipă?** Începe cu [ghidul de arhitectură și diagramele](docs/architecture.md): explică scopul comparației, structura aplicației, fluxul unei comenzi și diferența dintre starter și ținta S1. Apoi citește [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Contractele sunt deja decise.
 
 ## Pornire
 
@@ -87,7 +87,7 @@ Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-u
 
 ## Cum preiei un task
 
-1. Citește [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
+1. Citește [arhitectura](docs/architecture.md), apoi [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
 2. Urmează [CONTRIBUTING.md](CONTRIBUTING.md) și instrucțiunile [AGENTS.md](AGENTS.md), inclusiv cele locale.
 3. Implementează specificația fixată; nu mai există taskuri care cer să decideți contractele.
 4. Adaugă teste, rulează verificările și deschide un PR pentru minimum două aprobări de la colegi diferiți de autor.
