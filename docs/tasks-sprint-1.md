@@ -29,7 +29,7 @@ docs/contracts-v1.md; server/src/main/resources/static/openapi.yaml; shared/cont
 ### Nu intră în task
 Nu implementa termostatul/scenariile aici și nu reproiecta contractul. PR-ul livrează decizia și infrastructura, nu toate stories.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -62,7 +62,7 @@ shared/simulators/src/main/java/ro/upb/sasps/smarthome/simulators/VendorAThermos
 ### Nu intră în task
 Fără senzori, alți producători, întârzieri sau defecte simulate. Nu modifica formatul HTTP.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -95,7 +95,7 @@ implementations/patterns/src/main/java/ro/upb/sasps/smarthome/patterns/Thermosta
 ### Nu intră în task
 Fără Abstract Factory/Bridge, Spring sau al doilea producător. Baseline folosește simulatorul direct, nu acest adaptor.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -129,7 +129,7 @@ BaselineHome, PatternsHome și noul SetTargetTemperatureCommand; acceptance-test
 ### Nu intră în task
 Nu modifica DTO-uri/endpoints, nu adăuga registru dinamic, undo sau senzori. Constraint-urile primitive sunt deja implementate în contracte.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -163,7 +163,7 @@ BaselineHome, PatternsHome, noul patterns/SceneCommand.java; teste core și HTTP
 ### Nu intră în task
 Fără nesting, stocarea scenariilor, cicluri, Saga sau rollback hardware. Scenariile sunt trimise în request; numele este doar etichetă.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -197,7 +197,7 @@ server/src/test/java/.../HttpContractTest.java; server/pom.xml; docs/http/smart-
 ### Nu intră în task
 Nu crea CLI nou, React, Swagger UI, autentificare sau DB. Controllerul nu primește logica engines.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -231,7 +231,7 @@ acceptance-tests/src/test/java; server/src/test/java; docs/testing.md; POM-uri d
 ### Nu intră în task
 Fără refactorizarea engines sau analizor AST nou. Nu declara every switch un anti-pattern.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -265,7 +265,7 @@ benchmarks/pom.xml; benchmarks/src/main/java/.../MetricsMain.java; teste; pom.xm
 ### Nu intră în task
 Fără JMH, AI runner, dashboard sau benchmark cloud în S1. Rezultatul este descriptiv; nu dovedește superioritatea generală a patterns.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -298,7 +298,7 @@ README/CONTRIBUTING/docs doar dacă se descoperă o lipsă; dovezi în issue.
 ### Nu intră în task
 Nu reinstala infrastructură globală, nu configura cloud/DB și nu extinde aplicația.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
 ---
 
@@ -331,5 +331,5 @@ docs/demo-sprint-1.md; docs/progress-sprint-1.md; rezultate mici de referință;
 ### Nu intră în task
 Nu construi un deck mare, UI sau raportul final în acest task.
 
-Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Review de la un coleg diferit de autor. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
+Verificare comună: `./mvnw clean verify` (Windows: `.\mvnw.cmd clean verify`). Sunt necesare minimum două aprobări de la colegi diferiți de autor și CI verde. Termenii și formele JSON sunt în contractul v1; nu le schimba pentru a simplifica implementarea.
 
