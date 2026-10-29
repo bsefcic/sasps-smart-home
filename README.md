@@ -26,7 +26,7 @@ cd sasps-smart-home
 java -jar server/target/smart-home-server.jar
 ```
 
-Înainte de integrarea PR-ului Spring în main, pornește din branch-ul său `feat/spring-web-contract-v1`. Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
+Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
 
 Pentru baseline, într-un al doilea terminal:
 
@@ -90,7 +90,7 @@ Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-u
 1. Citește [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
 2. Urmează [CONTRIBUTING.md](CONTRIBUTING.md) și instrucțiunile [AGENTS.md](AGENTS.md), inclusiv cele locale.
 3. Implementează specificația fixată; nu mai există taskuri care cer să decideți contractele.
-4. Adaugă teste, rulează verificările și deschide un PR pentru review de la alt coleg.
+4. Adaugă teste, rulează verificările și deschide un PR pentru minimum două aprobări de la colegi diferiți de autor.
 
 ## Documentație
 
