@@ -2,7 +2,7 @@
 
 ## Dezvoltare obișnuită
 
-Orice coleg poate folosi instrumentul preferat. Issue-ul și documentele repo-ului sunt sursa cerințelor. Agentul nu primește libertatea de a extinde scope-ul. Autorul citește și verifică rezultatul înaintea PR-ului.
+Orice coleg poate folosi instrumentul preferat. Issue-ul, docs/contracts-v1.md și docs/tasks-sprint-1.md sunt sursa cerințelor. Contractul S1 este fix: nu îl reproiecta și nu cere echipei alte decizii de formă. Agentul nu primește libertatea de a extinde scope-ul. Autorul citește și verifică rezultatul înaintea PR-ului.
 
 Prompt de pornire:
 

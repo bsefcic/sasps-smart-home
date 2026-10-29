@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
+import ro.upb.sasps.smarthome.contracts.DeviceSnapshot;
+import ro.upb.sasps.smarthome.contracts.ErrorCode;
 import ro.upb.sasps.smarthome.contracts.HomeCommand;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
 import ro.upb.sasps.smarthome.contracts.LightSnapshot;
@@ -30,14 +32,15 @@ public final class PatternsHome implements SmartHome {
       new SetLightPowerCommand(receiver, request.power()).execute();
       return CommandResult.success();
     }
-    throw new IllegalArgumentException("Unsupported command");
+    return CommandResult.failure(
+        ErrorCode.NOT_IMPLEMENTED, "Temperature control is not implemented yet.");
   }
 
   @Override
   public HomeSnapshot getSnapshot() {
     return new HomeSnapshot(
         lights.values().stream()
-            .map(light -> new LightSnapshot(light.id(), light.isOn()))
+            .map(light -> (DeviceSnapshot) new LightSnapshot(light.id(), light.isOn()))
             .toList());
   }
 }

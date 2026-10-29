@@ -1,31 +1,23 @@
-# Scope și criterii funcționale
+# Scope
 
-## Context
+Echipă de patru, Java 17+, Spring Boot la granița HTTP. Aplicație web locală, cu un singur proces și o singură casă per server, fără hardware, DB, autentificare sau React în MVP.
 
-Echipă de patru persoane; Java; simulator local, controlabil prin CLI. Obiectivul este studiul comparativ, nu integrarea unei case reale. Patterns nu sunt presupuse superioare la toate metricile. Nu există un număr minim de patterns dedus din cerințele profesorului.
+## Contractele sunt decise
 
-## Ce există în bootstrap
+Sursa exactă este docs/contracts-v1.md și OpenAPI-ul versionat. Inventar-țintă S1: living-light oprit și living-thermostat cu targetTemperature 20.0°C. Temperaturile sunt 5–35°C inclusiv, pas 0.1. Scenariile au 1–50 comenzi și se verifică integral înainte de execuție. Ordinea dispozitivelor este crescătoare după ID.
 
-`new BaselineHome()` sau `new PatternsHome()` construiește o instanță independentă cu becul `living-light`, inițial oprit. `execute(new SetLightPower(deviceId, power))` setează starea, iar `getSnapshot()` întoarce o stare imuabilă. Un ID necunoscut produce `UNKNOWN_DEVICE` fără efecte. Setarea repetată la aceeași valoare este permisă. Contractul v0 este Java; starterul nu este încă un parser pentru input JSON arbitrar.
+## Implementat în starter
 
-## Sprint 1: obligatoriu pentru prezentarea din 16 noiembrie 2026
+Server HTTP cu health, status și controlul becului în ambele engines; sesiune sincronizată, strict JSON, erori uniforme, contracte Java, fixtures, exemple HTTP și teste. Temperatura validă și scenariile valide sunt explicit 501 NOT_IMPLEMENTED până la stories #5/#6. Schema nu înseamnă că implementarea feature-ului este gata.
 
-- Două tipuri: bec (pornit/oprit) și termostat (temperatură țintă între 5 și 35°C inclusiv, valori finite).
-- Un producător simulat și inventar determinist, fără înregistrare dinamică sau persistență.
-- Control manual și citirea stării, în ambele implementări.
-- Scenarii plate: secvențe ordonate de comenzi. Prevalidarea tuturor comenzilor înaintea execuției; o cerere invalidă nu modifică starea. Defectele hardware și rollback-ul nu intră în acest sprint.
-- CLI cu alegerea variantei și citirea unor scenarii JSON; output și exit codes documentate.
-- Input necunoscut, tipuri greșite și valori invalide respinse explicit; termeni și erori identici între variante.
-- Teste comune pentru căile normale și erori; o primă măsurare descriptivă, fără concluzii premature.
+## Sprint 1 — review 16 noiembrie 2026
 
-Contractul v1 va detalia forma termostatului, scenariilor și erorilor înaintea implementării. Intervalul de temperatură este o convenție a proiectului, nu o cerință a profesorului.
+Simulatorul și adaptorul termostatului, control manual complet, scenarii plate, testele HTTP finale, suita comună, metrici inițiale și demo. Nu se mai proiectează contractele. Povestea CLI a fost înlocuită de exemple și teste REST; CLI-ul vechi rămâne opțional. Pașii fiecărui task sunt în docs/tasks-sprint-1.md.
 
-## Sprint 2: ținta pentru 14 decembrie 2026
+## Sprint 2 — review 14 decembrie 2026
 
-Al doilea producător, scenarii imbricate cu detectarea ciclurilor, senzori de temperatură/mișcare, automatizări și două politici de temperatură. Command, Adapter, Composite, Observer și Strategy sunt nucleul propus. CLI, metrici și un experiment AI pilot funcționează până la prezentare.
+Al doilea producător, scenarii imbricate cu detectarea ciclurilor, senzori și automatizări, două politici de temperatură, metrici reproductibile și pilot AI. Nucleu: Command, Adapter, Composite, Observer și Strategy. Extensionarea contractului v1 pentru funcțiile S2 se documentează explicit înainte de dezvoltarea S2; contractul fix de acum este cel complet pentru S1.
 
-## Rezervat evaluării / opțional
+## Sprint 3 și opționale
 
-Un al treilea producător, o a treia politică și un consumator nou de evenimente sunt candidați pentru experiment; nu le implementăm anticipat. State, Decorator, undo, dashboard, încuietori și jaluzele sunt opționale și nu blochează livrarea.
-
-Nu includem hardware, cloud, autentificare, aplicație mobilă, microservicii sau baze de date în MVP. Modificarea scope-ului se notează într-o decizie și actualizează backlog-ul.
+Înghețarea versiunilor, experimentele finale, raportul și demonstrația. Un al treilea producător/o a treia politică/un consumator nou de evenimente sunt candidați rezervați evaluării, nu se implementează anticipat. React, State, Decorator, undo, jaluzele și încuietori sunt nice-to-haves după livrabilele obligatorii.

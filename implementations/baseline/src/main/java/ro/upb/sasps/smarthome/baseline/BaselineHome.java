@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
+import ro.upb.sasps.smarthome.contracts.DeviceSnapshot;
+import ro.upb.sasps.smarthome.contracts.ErrorCode;
 import ro.upb.sasps.smarthome.contracts.HomeCommand;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
 import ro.upb.sasps.smarthome.contracts.LightSnapshot;
@@ -30,7 +32,8 @@ public final class BaselineHome implements SmartHome {
       light.setPower(request.power() ? VendorALight.Power.ENABLED : VendorALight.Power.DISABLED);
       return CommandResult.success();
     }
-    throw new IllegalArgumentException("Unsupported command");
+    return CommandResult.failure(
+        ErrorCode.NOT_IMPLEMENTED, "Temperature control is not implemented yet.");
   }
 
   @Override
@@ -39,7 +42,9 @@ public final class BaselineHome implements SmartHome {
         lights.values().stream()
             .map(
                 light ->
-                    new LightSnapshot(light.id(), light.readPower() == VendorALight.Power.ENABLED))
+                    (DeviceSnapshot)
+                        new LightSnapshot(
+                            light.id(), light.readPower() == VendorALight.Power.ENABLED))
             .toList());
   }
 }

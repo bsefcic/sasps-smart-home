@@ -1,0 +1,14 @@
+{
+  "devices": [
+    {
+      "id": "living-light",
+      "kind": "light",
+      "power": false
+    },
+    {
+      "id": "living-thermostat",
+      "kind": "thermostat",
+      "targetTemperature": 20.0
+    }
+  ]
+}

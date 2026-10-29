@@ -1,0 +1,5 @@
+{
+  "type": "set-target-temperature",
+  "deviceId": "living-thermostat",
+  "temperature": 22
+}

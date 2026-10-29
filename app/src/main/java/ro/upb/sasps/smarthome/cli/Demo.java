@@ -3,6 +3,7 @@ package ro.upb.sasps.smarthome.cli;
 import java.io.PrintStream;
 import ro.upb.sasps.smarthome.baseline.BaselineHome;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
+import ro.upb.sasps.smarthome.contracts.LightSnapshot;
 import ro.upb.sasps.smarthome.contracts.SetLightPower;
 import ro.upb.sasps.smarthome.contracts.SmartHome;
 import ro.upb.sasps.smarthome.patterns.PatternsHome;
@@ -23,7 +24,7 @@ public final class Demo {
     }
     SmartHome home = variant.equals("baseline") ? new BaselineHome() : new PatternsHome();
     CommandResult result = home.execute(new SetLightPower("living-light", true));
-    boolean power = home.getSnapshot().devices().get(0).power();
+    boolean power = ((LightSnapshot) home.getSnapshot().devices().get(0)).power();
     // Fixed values only. A general JSON serializer/parser belongs to the CLI story.
     out.printf(
         "{\"result\":{\"ok\":%s},\"snapshot\":{\"devices\":[{\"id\":\"living-light\",\"kind\":\"light\",\"power\":%s}]}}%n",

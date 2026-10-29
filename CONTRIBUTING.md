@@ -1,38 +1,33 @@
 # Contribuții
 
-## Pornire
+## Onboarding
 
-Instalează un JDK 17 sau mai nou și verifică `java -version`. JAVA_HOME trebuie să indice JDK-ul dacă mediul îl cere. Maven nu trebuie instalat separat: wrapper-ul din repo descarcă versiunea 3.9.11 la prima rulare. Este necesar internet pentru descărcarea Maven și a dependențelor inițiale.
+Java 17+, Maven Wrapper 3.9.11. Din rădăcină: `./mvnw clean verify` sau Windows `.\mvnw.cmd clean verify`. Formatare: `./mvnw spotless:apply`. Importă pom.xml în IDE. Nu instala Maven separat.
 
-- macOS/Linux: `./mvnw clean verify`
-- Windows PowerShell: `.\mvnw.cmd clean verify`
-- Formatare Java: `./mvnw spotless:apply` (Windows: `.\mvnw.cmd spotless:apply`).
-- După build: `java -jar app/target/smart-home.jar baseline`, apoi aceeași comandă cu `patterns`.
+Rulează `java -jar server/target/smart-home-server.jar`. Pentru baseline folosește `--smart-home.variant=baseline --server.port=8081`. Verifică GET /api/v1/health și exemplele HTTP din docs/http/smart-home.http. Nu sunt necesare React, hardware, DB sau API keys.
 
-În IntelliJ IDEA, Eclipse sau VS Code importă `pom.xml` din rădăcină ca proiect Maven. Nu sunt necesare Node.js, Docker, API keys, baze de date sau hardware.
+## Înainte de cod
 
-## Un issue → un branch → un PR
+Citește docs/contracts-v1.md și docs/tasks-sprint-1.md: forma JSON, erorile, inventarul, semantica scenariilor și API-ul Vendor A sunt decise. Nu inventa variații și nu aștepta un task separat de proiectare. Contractele și starterul Spring sunt livrate prin PR-ul curent; taskurile de implementare pornesc după integrarea lui.
 
-Preia un issue ale cărui dependențe sunt integrate și anunță că lucrezi la el. Membrii se atribuie ulterior. Pleacă din main actualizat după integrarea bootstrap-ului Java. Nume de branch: `feat/<issue-number>-short-name`, `fix/...` sau `docs/...`. Nu lucra direct pe main. Până la integrarea bootstrap-ului, coordonează explicit pornirea din branch-ul Java; nu recrea structura independent.
+## Workflow
 
-Un task public acoperă ambele implementări, dacă issue-ul nu spune altceva. PR-ul descrie comportamentul, motivul, verificările și issue-ul (`Closes #...`). Review-ul este făcut de alt coleg. Nu include refactorizări fără legătură.
+- Preia un issue cu dependențele integrate; anunță că lucrezi la el. Membrii se atribuie ulterior.
+- Branch separat din main actualizat: feat/<issue>-short-name, fix/... sau docs/.... Până la integrarea bootstrap-ului coordonează explicit pornirea din branch-ul PR-ului.
+- Un task public acoperă ambele engines, unde este precizat. Nu adăuga logica comparată în server/shared.
+- PR-ul explică schimbarea, issue-ul, verificările și limitele. Un coleg diferit de autor face review.
+- Fără modificări directe în main, refactorizări fără legătură sau introducerea features rezervate evaluării AI.
 
 ## Definition of Ready
 
-Issue-ul are scop, criterii verificabile, variante afectate și dependențe. Contractul necesar este stabilit, iar dependențele sunt integrate. Orele sunt estimări, nu obligații individuale.
+Issue-ul are specificație fixă, exemple, criterii și dependențe. «Complet specificat» nu înseamnă că se poate începe înaintea dependențelor de implementare. Nu există decizii de interfață lăsate autorului unui story.
 
 ## Definition of Done
 
-- Criteriile de acceptanță sunt demonstrate, cu teste relevante.
-- `./mvnw clean verify` trece și CI este verde; orice verificare nerulată este explicată.
-- Demo-urile și documentația afectată sunt actualizate.
-- Un coleg a făcut review, observațiile importante sunt rezolvate și PR-ul este integrat.
-- Măsurătorile au commit, comandă și condiții reale; nu inventăm cifre.
+- Comportamentul și erorile contractuale au teste relevante; aceleași cazuri trec pe ambele variante.
+- ./mvnw clean verify și CI sunt verzi. Testele HTTP verifică starea și codul de răspuns, nu doar că serverul pornește.
+- Documentația descrie exact ce este implementat și ce încă returnează 501. La implementarea unui feature, testul temporar 501 este înlocuit explicit cu succes/erori conform contractului.
+- Review rezolvat și PR integrat. Abia atunci se închide taskul; trackerul sprintului rămâne deschis până la final.
+- Rezultatele au commit, comandă și condiții reale, fără cifre inventate.
 
-Aceste fișiere nu activează automat protecțiile de branch sau aprobările obligatorii.
-
-## Cod și teste
-
-Codul, package-urile și commit-urile sunt în engleză; documentația cursului în română. Folosește Java 17 standard, fără preview, cu interfețe mici și dependențe explicite. Nu introduce Spring sau Lombok în acest simulator mic.
-
-Testele unitare stau în modulul testat. Aceeași suită parametrizată din acceptance-tests rulează pe ambele variante. Schimbările de contract se aplică coerent, cu review; în experimentele controlate, agentul nu poate modifica evaluatorul extern. Vezi docs/ai-workflow.md.
+Aceste fișiere nu activează branch protection. Codul și package-urile sunt în engleză; documentația în română. Spring rămâne în server, DTO-urile nu depind de Jackson, iar engines nu se importă reciproc. Vezi instrucțiunile locale și docs/ai-workflow.md.

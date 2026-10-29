@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import ro.upb.sasps.smarthome.baseline.BaselineHome;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
+import ro.upb.sasps.smarthome.contracts.LightSnapshot;
 import ro.upb.sasps.smarthome.contracts.SetLightPower;
 import ro.upb.sasps.smarthome.contracts.SmartHome;
 import ro.upb.sasps.smarthome.patterns.PatternsHome;
@@ -28,11 +29,11 @@ class HomeAcceptanceTest {
   @MethodSource("implementations")
   void appliesPowerCommands(String variant, Supplier<SmartHome> factory) {
     SmartHome home = factory.get();
-    assertFalse(home.getSnapshot().devices().get(0).power());
+    assertFalse(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
     assertEquals(CommandResult.success(), home.execute(new SetLightPower("living-light", true)));
-    assertTrue(home.getSnapshot().devices().get(0).power());
+    assertTrue(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
     home.execute(new SetLightPower("living-light", false));
-    assertFalse(home.getSnapshot().devices().get(0).power());
+    assertFalse(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
   }
 
   @ParameterizedTest(name = "{0}: unknown device")
@@ -52,7 +53,7 @@ class HomeAcceptanceTest {
     HomeSnapshot before = home.getSnapshot();
     assertThrows(UnsupportedOperationException.class, () -> before.devices().clear());
     home.execute(new SetLightPower("living-light", true));
-    assertFalse(before.devices().get(0).power());
-    assertFalse(factory.get().getSnapshot().devices().get(0).power());
+    assertFalse(((LightSnapshot) before.devices().get(0)).power());
+    assertFalse(((LightSnapshot) factory.get().getSnapshot().devices().get(0)).power());
   }
 }

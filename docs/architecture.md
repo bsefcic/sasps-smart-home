@@ -1,32 +1,20 @@
-# Arhitectură și decizii inițiale
+# Arhitectură
 
-## Două implementări, aceeași interfață
+## Module
 
-Proiect Maven cu șase module, într-un singur repository:
+shared/contracts conține records/interfețe și constrângeri de input, fără Spring/Jackson și fără logica comparată. shared/simulators conține API-ul fictiv Vendor A. baseline și patterns depind doar de aceste două module și nu se importă reciproc.
 
-| Modul | Rol și dependențe |
-| --- | --- |
-| shared/contracts | Interfețe și records pentru cereri/rezultate; fără implementări |
-| shared/simulators | API fictiv Vendor A; fără orchestration sau politici |
-| implementations/baseline | Control centralizat; depinde numai de contracts și simulators |
-| implementations/patterns | Command și Adapter în starter; aceleași dependențe comune |
-| app | CLI și JAR executabil; poate încărca ambele variante |
-| acceptance-tests | Suită JUnit parametrizată pe ambele implementări |
+server este granița Spring Boot comună: JSON → RequestMapper → HomeSession → SmartHome. HomeConfiguration injectează o instanță BaselineHome sau PatternsHome pe baza smart-home.variant. HomeSession serializează comenzile, scenariile și citirile și capturează snapshot-ul sub același lock; răspunsurile sunt imuabile. Nu creăm o casă nouă la fiecare request.
 
-Codul Java este în src/main/java, testele în src/test/java, fixtures în src/test/resources. Niciuna dintre variante nu trebuie să importe sau să declare dependență pe cealaltă. Nu partajăm motorul de comenzi, scenarii sau automatizări, fiindcă acestea sunt comparate.
-
-## Starter
-
-BaselineHome și PatternsHome implementează SmartHome și pornesc independent cu becul living-light oprit. HomeCommand/SetLightPower sunt DTO-uri; Command/SetLightPowerCommand reprezintă acțiunea executabilă GoF. Adapter traduce boolean în enum-ul API-ului Vendor A. HomeSnapshot și LightSnapshot sunt records imuabile, cu lista copiată defensiv.
-
-Demo-ul produce JSON fix pentru un bec; nu este parser general și nu serializează input arbitrar. CLI-ul pentru fișiere este un task separat. Nu există Spring, server HTTP, baze de date sau hardware.
+app păstrează demo-ul CLI opțional. acceptance-tests verifică engines direct; server/src/test verifică aceeași suită HTTP cu câte un server real pentru fiecare variantă. Fixture-urile din acceptance-tests/src/test/resources sunt comune și disting starterul de ținta finală S1.
 
 ## Decizii
 
-1. Java 17 minimum, fără preview. CI rulează pe JDK 17 și 21. Records/sealed interfaces sunt standard; extinderea tipurilor de comandă se face în contractul v1.
-2. Maven Wrapper 3.9.11 și versiuni explicite pentru pluginuri/dependențele directe; un singur `clean verify` verifică toate modulele. Acesta nu este un lockfile complet pentru dependențele tranzitive.
-3. JUnit 5 pentru teste; Spotless/google-java-format pentru stil; javac -Xlint:all -Werror pentru warnings. Compilarea și testele nu reprezintă o verificare statică exhaustivă a designului.
-4. Un repository pentru colaborare; workspace-uri separate și neutre pentru experimentul AI. Nu expunem agentului cealaltă variantă sau soluția de referință.
-5. Un proces local; infrastructură minimă. Enum-urile, if/switch și metodele directe nu sunt automat anti-pattern-uri. Măsurăm consecințele concrete.
+1. Java 17+, Spring Boot 3.5.16 și Maven Wrapper 3.9.11. Spring BOM aliniază dependențele, inclusiv JUnit; pluginurile sunt versionate explicit. Fără preview, Lombok sau framework în engines.
+2. O singură implementare per proces, selectată la startup; pentru comparație rulează două procese pe porturi diferite. Niciun header/body nu schimbă varianta.
+3. HTTP parsing, strict shape și sincronizarea sunt infrastructură identică. Executarea/prevalidarea inventarului/scenariilor și politicile rămân separate în engines.
+4. Contract v1 fix: docs/contracts-v1.md și OpenAPI. NOT_IMPLEMENTED delimitează explicit features încă de implementat, nu substituie rezultatul final.
+5. Spring servește și OpenAPI static, fără generator sau UI. CORS este configurabil pentru un React local viitor; frontend-ul nu este scope curent.
+6. Benchmark principal direct pe engines, separat de overhead-ul serverului. Nu declarăm orice if/switch anti-pattern și nu presupunem că patterns sunt mai rapide.
 
-Orice schimbare importantă documentează contextul, alegerea, alternativele și consecințele. Baseline rămâne plauzibil și corect; patterns nu sunt presupuse superioare la toate metricile.
+La extensii, documentează contextul, alegerea și consecințele. Nu pune DTO-uri de producător, comenzi executabile sau orchestration în contracte.

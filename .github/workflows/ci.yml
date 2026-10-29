@@ -34,3 +34,16 @@ jobs:
             echo "Invalid variant must fail"
             exit 1
           fi
+      - name: Start packaged Spring server and check health
+        run: |
+          java -jar server/target/smart-home-server.jar --server.port=18080 > server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:18080/api/v1/health > health.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q '"status":"UP"' health.json
+          curl --fail --silent --max-time 5 http://127.0.0.1:18080/api/v1/home

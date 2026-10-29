@@ -6,7 +6,7 @@ Ce cost structural și la execuție introduc abstracțiile? Cât de localizate �
 
 ## Echivalență
 
-Aceleași cerințe, simulatoare, fixtures, comportamente și teste de acceptanță. Efecte și rezultate verificate înainte de măsurarea performanței. Baseline rămâne plauzibil și corect: nu adăugăm intenționat întârzieri, bug-uri sau duplicări.
+Aceleași cerințe, contract v1, simulatoare, fixtures, comportamente și teste de acceptanță. Serverul Spring și politica de sincronizare sunt comune; măsurăm engines direct și raportăm separat orice experiment HTTP. Efecte și rezultate verificate înainte de măsurarea performanței. Baseline rămâne plauzibil și corect: nu adăugăm intenționat întârzieri, bug-uri sau duplicări.
 
 ## Metrici și proveniență
 

@@ -1,105 +1,102 @@
-# Smart Home — Design Patterns Comparative Study
+# Smart Home — SASPS
 
-Proiect SASPS: simulator de casă inteligentă, dezvoltat de patru persoane în **Java**, în două variante echivalente funcțional:
+Simulator de casă inteligentă în **Java 17+ și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
 
-- **Baseline:** control centralizat și apeluri directe.
-- **Patterns:** responsabilități separate și patterns justificate.
+**Contractele sunt deja decise.** Începe cu [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Primul task nu mai cere alegerea interfețelor.
 
-Comparăm extensibilitatea, complexitatea, corectitudinea și costul la execuție. Ulterior evaluăm implementarea acelorași features de către același agent AI, în condiții controlate. Nu presupunem un câștigător.
+## Pornire
 
-## Quick start
+Instalează JDK 17 sau mai nou. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE.
 
-Necesită **JDK 17+**. Verifică `java -version`; configurează `JAVA_HOME` către JDK dacă este necesar. Maven Wrapper descarcă versiunea 3.9.11 și dependențele la prima rulare, deci este necesar acces la internet. Maven nu trebuie instalat separat.
-
-### macOS / Linux
+macOS/Linux:
 
 ```sh
 git clone https://github.com/bsefcic/sasps-smart-home.git
 cd sasps-smart-home
 ./mvnw clean verify
-java -jar app/target/smart-home.jar baseline
-java -jar app/target/smart-home.jar patterns
+java -jar server/target/smart-home-server.jar
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 git clone https://github.com/bsefcic/sasps-smart-home.git
 cd sasps-smart-home
 .\mvnw.cmd clean verify
-java -jar app/target/smart-home.jar baseline
-java -jar app/target/smart-home.jar patterns
+java -jar server/target/smart-home-server.jar
 ```
 
-În IDE importă `pom.xml` din rădăcină ca proiect Maven. Nu sunt necesare Spring, hardware, Docker, baze de date sau chei API. Comenzile presupun integrarea bootstrap-ului Java în main; înainte de integrare, folosește branch-ul PR-ului Java.
+Înainte de integrarea PR-ului Spring în main, pornește din branch-ul său `feat/spring-web-contract-v1`. Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
 
-## Ce arată demo-ul
+Pentru baseline, într-un al doilea terminal:
 
-Ambele variante pornesc becul simulat `living-light` și afișează același JSON:
-
-```json
-{"result":{"ok":true},"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true}]}}
+```sh
+java -jar server/target/smart-home-server.jar --smart-home.variant=baseline --server.port=8081
 ```
 
-O variantă necunoscută produce exit code nenul. Acesta este un demo fix, nu un parser general de scenarii JSON. CLI-ul complet este un task din Sprint 1.
+Fiecare proces păstrează o casă în memorie între requests; restartul resetează starea. Variantele folosesc aceleași endpoint-uri și formate. Configurația cu o variantă necunoscută este respinsă la pornire.
 
-## Comenzi uzuale
+## Exemplu HTTP
 
-| Comandă macOS/Linux | Rol |
+```sh
+curl -X POST http://127.0.0.1:8080/api/v1/commands -H "Content-Type: application/json" -d '{"type":"set-light-power","deviceId":"living-light","power":true}'
+```
+
+Pentru PowerShell poți folosi:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/commands -ContentType application/json -Body '{"type":"set-light-power","deviceId":"living-light","power":true}'
+```
+
+Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utilizabil în IntelliJ HTTP Client sau VS Code REST Client.
+
+## Ce funcționează acum
+
+- Server Spring Boot 3.5.16, validare strictă a JSON-ului, erori uniforme, selectarea engine-ului și CORS configurat pentru un React local viitor.
+- Health, citirea stării și control on/off pentru becul living-light în ambele engines.
+- Command și Adapter în patterns; API direct în baseline.
+- Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
+- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 17 și 21.
+
+**Funcționalități încă de implementat:** simulatorul/adaptorul de termostat, controlul lui în engines și scenariile plate sunt stories #3–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
+
+React nu este implementat și nu este necesar pentru S1. Îl putem conecta ulterior la API; origin-urile implicite permise sunt http://localhost:5173 și http://localhost:3000. Nu sunt necesare hardware, baze de date, Docker sau chei API.
+
+## Module
+
+| Modul | Rol |
 | --- | --- |
-| `./mvnw clean verify` | Compilare strictă, teste JUnit, JAR și verificarea formatării Java |
-| `./mvnw test` | Compilare și teste, fără toate verificările din verify |
-| `./mvnw spotless:apply` | Formatare automată Java |
-| `./mvnw spotless:check` | Verifică formatarea fără modificări |
-| `java -jar app/target/smart-home.jar baseline` | Demo baseline, după build |
-| `java -jar app/target/smart-home.jar patterns` | Demo patterns, după build |
+| shared/contracts | Requests, results și snapshots imuabile, fără Spring/Jackson |
+| shared/simulators | API-uri fictive de producători |
+| implementations/baseline | Engine cu control direct |
+| implementations/patterns | Engine cu patterns justificate |
+| server | Spring Boot, HTTP, DI și sincronizarea sesiunii |
+| app | Demo CLI opțional din bootstrap-ul Java |
+| acceptance-tests | Suită de acceptanță comună și fixtures JSON |
+| benchmarks / experiments | Metodologie; scripturile vin în stories dedicate |
 
-Pe Windows înlocuiește `./mvnw` cu `.\mvnw.cmd`. Rulează comenzile Maven din rădăcină: reactorul construiește modulele în ordinea dependențelor. CI verifică JDK 17 și 21. Versiunile dependențelor directe și pluginurilor sunt stabilite în POM; nu există un lockfile tranzitiv complet.
+Structură Java standard: src/main/java, src/test/java și src/test/resources. Nu partajăm logica de execuție/scenarii între engines.
 
-## Structura repository-ului
+## Verificări
 
-| Director / modul Maven | Responsabilitate |
-| --- | --- |
-| `shared/contracts` | Interfețe și records comune, fără motorul comparat |
-| `shared/simulators` | API fictiv al producătorului |
-| `implementations/baseline` | Control direct, corect și plauzibil |
-| `implementations/patterns` | Implementarea cu patterns |
-| `app` | CLI și JAR executabil |
-| `acceptance-tests` | Aceleași teste JUnit pentru ambele variante |
-| `benchmarks` | Metodologie și scripturi de măsurare planificate |
-| `experiments` | Experimente AI planificate pentru S2–S3 |
-| `docs` | Scope, arhitectură, plan și protocolul evaluării |
-| `.github` | CI și template-uri de colaborare |
+- `./mvnw clean verify`: compilare strictă, teste, packaging și formatare Java.
+- `./mvnw spotless:apply`: formatare automată Java.
+- `./mvnw test`: compilare și teste, fără toate verificările verify.
 
-Fiecare modul folosește directoarele Java standard `src/main/java` și `src/test/java`. Fișierele JSON comune se adaugă în `acceptance-tests/src/test/resources/fixtures`.
+Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-ului Spring. Demo-ul vechi rămâne disponibil după build prin `java -jar app/target/smart-home.jar baseline` sau `patterns`; nu este interfața web principală.
 
-## Implementat în bootstrap
+## Cum preiei un task
 
-- Java 17+, Maven Wrapper și proiect modular, fără framework runtime.
-- Un bec și un producător simulat.
-- Control on/off în ambele variante; Command și Adapter în patterns.
-- Records imuabile pentru snapshots și teste comune pentru control, erori și izolarea stării.
-- Teste CLI, formatare Java și CI.
+1. Citește [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
+2. Urmează [CONTRIBUTING.md](CONTRIBUTING.md) și instrucțiunile [AGENTS.md](AGENTS.md), inclusiv cele locale.
+3. Implementează specificația fixată; nu mai există taskuri care cer să decideți contractele.
+4. Adaugă teste, rulează verificările și deschide un PR pentru review de la alt coleg.
 
-## Ce urmează
+## Documentație
 
-S1 adaugă termostatul, validarea inputului, scenarii plate, CLI pentru fișiere și primele măsurători. S2 urmărește al doilea producător, scenarii imbricate, senzori, Observer și Strategy. Nu există încă rezultate de benchmark sau experimente AI.
+- [Contract v1: API, erori, inventar, scenarii, Vendor A](docs/contracts-v1.md)
+- [Taskuri S1 cu pași și rezultate așteptate](docs/tasks-sprint-1.md)
+- [Scope](docs/scope.md) și [plan/calendar](docs/plan.md)
+- [Arhitectură](docs/architecture.md), [lucru cu AI](docs/ai-workflow.md), [evaluare](docs/evaluation.md)
 
-State, Decorator, undo, încuietori, jaluzele și dashboard rămân opționale. Nu sunt necesare integrări reale sau infrastructură distribuită.
-
-## Începe un task
-
-1. Citește [planul și backlog-ul](docs/plan.md), apoi [scope-ul](docs/scope.md).
-2. Alege un issue cu dependențele integrate și anunță că îl preiei. Membrii se atribuie ulterior.
-3. Urmează [CONTRIBUTING.md](CONTRIBUTING.md): branch, verificări și review de la alt coleg.
-4. Pentru AI citește [AGENTS.md](AGENTS.md), instrucțiunile locale și [workflow-ul AI](docs/ai-workflow.md).
-
-## Evaluare și documentație
-
-- [Arhitectură și decizii](docs/architecture.md)
-- [Metodologie și experiment AI](docs/evaluation.md)
-- [Planul sprinturilor](docs/plan.md)
-
-Metrici: LOC, complexitate, modificări, regresii, execuție și, unde metoda permite, memorie. AI: timp până la trecerea testelor, tokeni real raportați, încercări și rezultate incomplete. Evaluatorul extern este protejat prin izolare, nu doar prin instrucțiuni.
-
-Raportul urmează structura din materialele profesorului: introducere, metodologie, analiza modelelor, eficiență și optimizare, studiu comparativ, impactul anti-pattern-urilor, concluzii și bibliografie.
+Comparăm metrici structurale, schimbări, corectitudine și execuție. Măsurăm engines direct; latența HTTP/Spring se raportează separat. Experimentul AI este planificat pentru S2–S3, cu workspace-uri izolate. Nu presupunem că patterns câștigă la toate metricile.

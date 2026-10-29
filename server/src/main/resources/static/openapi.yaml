@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: SASPS Smart Home API
+  version: 1.0.0
+  description: >-
+    Contract v1. Starter implements light control and status. Valid temperature
+    and scene requests return explicit 501 until Sprint 1 stories 5 and 6.
+servers:
+  - url: http://127.0.0.1:8080
+    description: patterns (default)
+  - url: http://127.0.0.1:8081
+    description: baseline process
+paths:
+  /api/v1/health:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Server running
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                additionalProperties: false
+                properties:
+                  status: {type: string, enum: [UP]}
+  /api/v1/home:
+    get:
+      operationId: getHome
+      responses:
+        '200':
+          description: Current immutable state, devices ordered by id
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HomeSnapshot'}
+  /api/v1/commands:
+    post:
+      operationId: executeCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Command'}
+      responses:
+        '200': {$ref: '#/components/responses/Execution'}
+        '400': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '501': {$ref: '#/components/responses/Error'}
+        '415': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /api/v1/scenes/execute:
+    post:
+      operationId: executeScene
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SceneRequest'}
+      responses:
+        '200': {$ref: '#/components/responses/Execution'}
+        '400': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '501': {$ref: '#/components/responses/Error'}
+        '415': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+components:
+  responses:
+    Execution:
+      description: Operation completed; snapshot captured under the session lock
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ExecutionResponse'}
+    Error:
+      description: Rejected input has no effects; see docs/contracts-v1.md for status mapping
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+  schemas:
+    DeviceId:
+      type: string
+      pattern: '^[a-z][a-z0-9-]{0,63}$'
+      example: living-light
+    Temperature:
+      type: number
+      minimum: 5
+      maximum: 35
+      multipleOf: 0.1
+      example: 22.1
+    Command:
+      oneOf:
+        - {$ref: '#/components/schemas/SetLightPower'}
+        - {$ref: '#/components/schemas/SetTargetTemperature'}
+      discriminator:
+        propertyName: type
+        mapping:
+          set-light-power: '#/components/schemas/SetLightPower'
+          set-target-temperature: '#/components/schemas/SetTargetTemperature'
+    SetLightPower:
+      type: object
+      additionalProperties: false
+      required: [type, deviceId, power]
+      properties:
+        type: {type: string, enum: [set-light-power]}
+        deviceId: {$ref: '#/components/schemas/DeviceId'}
+        power: {type: boolean}
+    SetTargetTemperature:
+      type: object
+      additionalProperties: false
+      required: [type, deviceId, temperature]
+      properties:
+        type: {type: string, enum: [set-target-temperature]}
+        deviceId: {$ref: '#/components/schemas/DeviceId'}
+        temperature: {$ref: '#/components/schemas/Temperature'}
+    SceneRequest:
+      type: object
+      additionalProperties: false
+      required: [name, commands]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '\S'
+          description: Nonblank; Java String.length at most 64, kept unchanged
+        commands:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: {$ref: '#/components/schemas/Command'}
+    HomeSnapshot:
+      type: object
+      additionalProperties: false
+      required: [devices]
+      properties:
+        devices:
+          type: array
+          description: Sorted by id; starter has one light, target S1 adds thermostat
+          items:
+            oneOf:
+              - {$ref: '#/components/schemas/LightSnapshot'}
+              - {$ref: '#/components/schemas/ThermostatSnapshot'}
+    LightSnapshot:
+      type: object
+      additionalProperties: false
+      required: [id, kind, power]
+      properties:
+        id: {$ref: '#/components/schemas/DeviceId'}
+        kind: {type: string, enum: [light]}
+        power: {type: boolean}
+    ThermostatSnapshot:
+      type: object
+      additionalProperties: false
+      required: [id, kind, targetTemperature]
+      properties:
+        id: {$ref: '#/components/schemas/DeviceId'}
+        kind: {type: string, enum: [thermostat]}
+        targetTemperature: {$ref: '#/components/schemas/Temperature'}
+    ExecutionResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, executedCommands, snapshot]
+      properties:
+        ok: {type: boolean, enum: [true]}
+        executedCommands: {type: integer, minimum: 1, maximum: 50}
+        snapshot: {$ref: '#/components/schemas/HomeSnapshot'}
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, error]
+      properties:
+        ok: {type: boolean, enum: [false]}
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [INVALID_REQUEST, INVALID_COMMAND, INVALID_TEMPERATURE, INVALID_SCENE, UNKNOWN_DEVICE, INCOMPATIBLE_DEVICE, NOT_IMPLEMENTED, NOT_FOUND, INTERNAL_ERROR]
+            message: {type: string}
+            commandIndex:
+              type: integer
+              minimum: 0
+              maximum: 49
+              description: Present only for an individual command error inside a scene

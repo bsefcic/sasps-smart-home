@@ -1,0 +1,15 @@
+{
+  "name": "leave-home",
+  "commands": [
+    {
+      "type": "set-light-power",
+      "deviceId": "living-light",
+      "power": false
+    },
+    {
+      "type": "set-target-temperature",
+      "deviceId": "living-thermostat",
+      "temperature": 18
+    }
+  ]
+}
