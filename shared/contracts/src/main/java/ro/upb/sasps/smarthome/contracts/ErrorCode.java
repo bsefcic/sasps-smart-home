@@ -1,0 +1,13 @@
+package ro.upb.sasps.smarthome.contracts;
+
+public enum ErrorCode {
+  INVALID_REQUEST,
+  INVALID_COMMAND,
+  INVALID_TEMPERATURE,
+  INVALID_SCENE,
+  UNKNOWN_DEVICE,
+  INCOMPATIBLE_DEVICE,
+  NOT_IMPLEMENTED,
+  NOT_FOUND,
+  INTERNAL_ERROR
+}

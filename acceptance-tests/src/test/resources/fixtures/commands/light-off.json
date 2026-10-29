@@ -1,0 +1,5 @@
+{
+  "type": "set-light-power",
+  "deviceId": "living-light",
+  "power": false
+}

@@ -1,0 +1,39 @@
+# Compatibil cu IntelliJ HTTP Client / extensia REST Client.
+# Schimbă baseUrl la http://127.0.0.1:8081 pentru procesul baseline.
+@baseUrl = http://127.0.0.1:8080
+
+### Health — 200
+GET {{baseUrl}}/api/v1/health
+
+### Starea casei — 200
+GET {{baseUrl}}/api/v1/home
+
+### Pornire bec — 200
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+{"type":"set-light-power","deviceId":"living-light","power":true}
+
+### Temperatură — 501 în starter, 200 după taskul #5
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":22}
+
+### Scenariu — 501 în starter, 200 după taskul #6
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{"name":"leave-home","commands":[{"type":"set-light-power","deviceId":"living-light","power":false},{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":18}]}
+
+### Device necunoscut — 404
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+{"type":"set-light-power","deviceId":"missing","power":true}
+
+### Scenariu invalid — 422, commandIndex 1, fără modificări
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{"name":"invalid-middle","commands":[{"type":"set-light-power","deviceId":"living-light","power":true},{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":100}]}

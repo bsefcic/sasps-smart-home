@@ -1,0 +1,30 @@
+name: Story / task
+description: Comportament sau livrabil delimitat
+title: '[S1] '
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Scop și variante afectate
+      description: Ce obținem, de ce și în baseline/patterns/both/evaluation?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterii de acceptanță
+      description: Checklist verificabil, inclusiv erori și echivalență unde se aplică.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependențe și limite de scope
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimare orientativă (ore)
+  - type: textarea
+    id: validation
+    attributes:
+      label: Verificări și demonstrație

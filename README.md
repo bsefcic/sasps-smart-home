@@ -1,121 +1,102 @@
-# Smart Home — Design Patterns Comparative Study
+# Smart Home — SASPS
 
-Proiect pentru disciplina **Stiluri arhitecturale și șabloane de proiectare software (SASPS)**.
+Simulator de casă inteligentă în **Java 17+ și Spring Boot**, cu două engines echivalente: **baseline** (control direct) și **patterns** (Command, Adapter și extensiile planificate). Spring este o interfață comună peste engines, nu parte din logica de design comparată.
 
-## Scop
+**Contractele sunt deja decise.** Începe cu [contractul v1](docs/contracts-v1.md) și [taskurile explicate pas cu pas](docs/tasks-sprint-1.md). Primul task nu mai cere alegerea interfețelor.
 
-Dezvoltarea unui simulator de casă inteligentă în două variante echivalente funcțional:
+## Pornire
 
-- **Baseline:** implementare cu logică centralizată, condiționale și dependențe directe.
-- **Patterns:** implementare care utilizează design patterns justificate de problemele aplicației.
+Instalează JDK 17 sau mai nou. Maven Wrapper descarcă Maven 3.9.11 și dependențele la prima rulare; Maven nu trebuie instalat separat. Importă pom.xml din rădăcină în IDE.
 
-Proiectul urmărește compararea impactului acestor abordări asupra extensibilității, complexității, testabilității și performanței.
+macOS/Linux:
 
-O componentă experimentală va analiza implementarea acelorași funcționalități noi de către același model AI în ambele variante.
+```sh
+git clone https://github.com/bsefcic/sasps-smart-home.git
+cd sasps-smart-home
+./mvnw clean verify
+java -jar server/target/smart-home-server.jar
+```
 
-## Domeniul aplicației
+Windows PowerShell:
 
-Sistemul permite controlul unor dispozitive simulate și definirea unor automatizări pentru o casă inteligentă.
+```powershell
+git clone https://github.com/bsefcic/sasps-smart-home.git
+cd sasps-smart-home
+.\mvnw.cmd clean verify
+java -jar server/target/smart-home-server.jar
+```
 
-Nu este necesar hardware fizic. Interacțiunea se realizează prin CLI sau API.
+Înainte de integrarea PR-ului Spring în main, pornește din branch-ul său `feat/spring-web-contract-v1`. Configurația implicită folosește patterns pe http://127.0.0.1:8080. Verifică în browser `/api/v1/health`, `/api/v1/home` sau `/openapi.yaml`.
 
-### Funcționalități planificate
+Pentru baseline, într-un al doilea terminal:
 
-- Înregistrarea și controlul dispozitivelor:
-  - becuri;
-  - termostate;
-  - jaluzele;
-  - încuietori.
-- Simularea senzorilor de temperatură și mișcare.
-- Executarea comenzilor individuale.
-- Definirea și executarea scenariilor, precum „Plec de acasă”.
-- Gruparea comenzilor și includerea scenariilor în alte scenarii.
-- Declanșarea automatizărilor pe baza evenimentelor senzorilor.
-- Alegerea unor politici de control al temperaturii.
-- Integrarea unor API-uri simulate de producători diferiți.
+```sh
+java -jar server/target/smart-home-server.jar --smart-home.variant=baseline --server.port=8081
+```
 
-## Design patterns vizate
+Fiecare proces păstrează o casă în memorie între requests; restartul resetează starea. Variantele folosesc aceleași endpoint-uri și formate. Configurația cu o variantă necunoscută este respinsă la pornire.
 
-| Pattern | Utilizare |
-|---|---|
-| Command | Încapsularea și executarea acțiunilor asupra dispozitivelor |
-| Composite | Construirea scenariilor din comenzi și alte scenarii |
-| Adapter | Uniformizarea interfețelor diferiților producători |
-| Observer | Notificarea automatizărilor la schimbarea valorilor senzorilor |
-| Strategy | Alegerea politicilor de control al temperaturii |
+## Exemplu HTTP
 
-Patterns suplimentare, precum State sau Decorator, pot fi introduse dacă funcționalitățile implementate le justifică.
+```sh
+curl -X POST http://127.0.0.1:8080/api/v1/commands -H "Content-Type: application/json" -d '{"type":"set-light-power","deviceId":"living-light","power":true}'
+```
 
-## Metodologia comparației
+Pentru PowerShell poți folosi:
 
-Cele două variante vor utiliza:
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/commands -ContentType application/json -Body '{"type":"set-light-power","deviceId":"living-light","power":true}'
+```
 
-- aceleași cerințe funcționale și reguli de validare;
-- același limbaj și aceeași infrastructură relevantă;
-- aceleași date și scenarii de test;
-- aceleași teste de acceptanță;
-- condiții comparabile pentru măsurarea performanței.
+Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utilizabil în IntelliJ HTTP Client sau VS Code REST Client.
 
-Varianta baseline trebuie să fie funcțională și plauzibilă. Problemele de proiectare și anti-pattern-urile analizate vor fi identificate explicit.
+## Ce funcționează acum
 
-Nu presupunem că utilizarea design patterns îmbunătățește toate metricile.
+- Server Spring Boot 3.5.16, validare strictă a JSON-ului, erori uniforme, selectarea engine-ului și CORS configurat pentru un React local viitor.
+- Health, citirea stării și control on/off pentru becul living-light în ambele engines.
+- Command și Adapter în patterns; API direct în baseline.
+- Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
+- Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 17 și 21.
 
-## Metrici urmărite
+**Funcționalități încă de implementat:** simulatorul/adaptorul de termostat, controlul lui în engines și scenariile plate sunt stories #3–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
 
-### Structura codului
+React nu este implementat și nu este necesar pentru S1. Îl putem conecta ulterior la API; origin-urile implicite permise sunt http://localhost:5173 și http://localhost:3000. Nu sunt necesare hardware, baze de date, Docker sau chei API.
 
-- Număr de linii de cod.
-- Complexitate ciclomatică.
-- Dependențe între module.
-- Distribuția responsabilităților.
+## Module
 
-Codul aplicației, testele și codul generat vor fi raportate separat.
+| Modul | Rol |
+| --- | --- |
+| shared/contracts | Requests, results și snapshots imuabile, fără Spring/Jackson |
+| shared/simulators | API-uri fictive de producători |
+| implementations/baseline | Engine cu control direct |
+| implementations/patterns | Engine cu patterns justificate |
+| server | Spring Boot, HTTP, DI și sincronizarea sesiunii |
+| app | Demo CLI opțional din bootstrap-ul Java |
+| acceptance-tests | Suită de acceptanță comună și fixtures JSON |
+| benchmarks / experiments | Metodologie; scripturile vin în stories dedicate |
 
-### Extensibilitate și corectitudine
+Structură Java standard: src/main/java, src/test/java și src/test/resources. Nu partajăm logica de execuție/scenarii între engines.
 
-- Fișiere modificate pentru o funcționalitate nouă.
-- Linii adăugate și șterse.
-- Regresii introduse.
-- Rezultatele testelor de acceptanță.
+## Verificări
 
-### Execuție
+- `./mvnw clean verify`: compilare strictă, teste, packaging și formatare Java.
+- `./mvnw spotless:apply`: formatare automată Java.
+- `./mvnw test`: compilare și teste, fără toate verificările verify.
 
-- Timp de execuție pentru scenarii identice.
-- Consum de memorie.
-- Overhead introdus de abstracții.
+Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-ului Spring. Demo-ul vechi rămâne disponibil după build prin `java -jar app/target/smart-home.jar baseline` sau `patterns`; nu este interfața web principală.
 
-## Experimentul cu AI
+## Cum preiei un task
 
-Același model AI va primi aceeași cerință de extindere pentru fiecare variantă, în sesiuni independente.
+1. Citește [ghidul complet S1](docs/tasks-sprint-1.md) și issue-ul, inclusiv dependențele.
+2. Urmează [CONTRIBUTING.md](CONTRIBUTING.md) și instrucțiunile [AGENTS.md](AGENTS.md), inclusiv cele locale.
+3. Implementează specificația fixată; nu mai există taskuri care cer să decideți contractele.
+4. Adaugă teste, rulează verificările și deschide un PR pentru review de la alt coleg.
 
-Vom păstra comparabile instrucțiunile, instrumentele și bugetele de execuție. Fiecare rulare va porni de la versiunea inițială stabilită.
+## Documentație
 
-Vom înregistra:
+- [Contract v1: API, erori, inventar, scenarii, Vendor A](docs/contracts-v1.md)
+- [Taskuri S1 cu pași și rezultate așteptate](docs/tasks-sprint-1.md)
+- [Scope](docs/scope.md) și [plan/calendar](docs/plan.md)
+- [Arhitectură](docs/architecture.md), [lucru cu AI](docs/ai-workflow.md), [evaluare](docs/evaluation.md)
 
-- timpul până la trecerea testelor de acceptanță;
-- tokenii de input și output;
-- numărul de încercări;
-- fișierele și liniile modificate;
-- testele trecute și regresiile;
-- eventualele rulări incomplete.
-
-Exemple de extensii:
-
-- integrarea unui producător nou;
-- adăugarea unei politici de temperatură;
-- introducerea unui nou consumator al evenimentelor;
-- implementarea anulării comenzilor reversibile.
-
-Testele de acceptanță vor fi stabilite înaintea experimentului și protejate împotriva modificării de către agent.
-
-## Livrabile
-
-- Cele două implementări.
-- Teste comune de acceptanță.
-- Scenarii și scripturi de evaluare.
-- Rezultatele experimentelor.
-- Raport comparativ și demonstrație.
-
-## Stadiu
-
-Proiectul se află în etapa de definire a cerințelor și arhitecturii. Funcționalitățile și experimentele descrise sunt planificate.
+Comparăm metrici structurale, schimbări, corectitudine și execuție. Măsurăm engines direct; latența HTTP/Spring se raportează separat. Experimentul AI este planificat pentru S2–S3, cu workspace-uri izolate. Nu presupunem că patterns câștigă la toate metricile.

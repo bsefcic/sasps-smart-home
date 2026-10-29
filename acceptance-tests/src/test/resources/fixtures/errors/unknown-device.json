@@ -1,0 +1,5 @@
+{
+  "type": "set-light-power",
+  "deviceId": "missing",
+  "power": true
+}
