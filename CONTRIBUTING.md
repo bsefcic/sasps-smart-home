@@ -8,14 +8,14 @@ Rulează `java -jar server/target/smart-home-server.jar`. Pentru baseline folose
 
 ## Înainte de cod
 
-Citește docs/contracts-v1.md și docs/tasks-sprint-1.md: forma JSON, erorile, inventarul, semantica scenariilor și API-ul Vendor A sunt decise. Nu inventa variații și nu aștepta un task separat de proiectare. Contractele și starterul Spring sunt livrate prin PR-ul curent; taskurile de implementare pornesc după integrarea lui.
+Citește docs/contracts-v1.md și docs/tasks-sprint-1.md: forma JSON, erorile, inventarul, semantica scenariilor și API-ul Vendor A sunt decise. Nu inventa variații și nu aștepta un task separat de proiectare. Contractele și starterul Spring sunt integrate în main; respectă dependențele issue-ului ales.
 
 ## Workflow
 
 - Preia un issue cu dependențele integrate; anunță că lucrezi la el. Membrii se atribuie ulterior.
-- Branch separat din main actualizat: feat/<issue>-short-name, fix/... sau docs/.... Până la integrarea bootstrap-ului coordonează explicit pornirea din branch-ul PR-ului.
+- Branch separat din main actualizat: feat/<issue>-short-name, fix/... sau docs/....
 - Un task public acoperă ambele engines, unde este precizat. Nu adăuga logica comparată în server/shared.
-- PR-ul explică schimbarea, issue-ul, verificările și limitele. Un coleg diferit de autor face review.
+- PR-ul explică schimbarea, issue-ul, verificările și limitele. Sunt necesare aprobări de la minimum doi colegi diferiți de autor și ambele verificări CI verzi.
 - Fără modificări directe în main, refactorizări fără legătură sau introducerea features rezervate evaluării AI.
 
 ## Definition of Ready
@@ -27,7 +27,9 @@ Issue-ul are specificație fixă, exemple, criterii și dependențe. «Complet s
 - Comportamentul și erorile contractuale au teste relevante; aceleași cazuri trec pe ambele variante.
 - ./mvnw clean verify și CI sunt verzi. Testele HTTP verifică starea și codul de răspuns, nu doar că serverul pornește.
 - Documentația descrie exact ce este implementat și ce încă returnează 501. La implementarea unui feature, testul temporar 501 este înlocuit explicit cu succes/erori conform contractului.
-- Review rezolvat și PR integrat. Abia atunci se închide taskul; trackerul sprintului rămâne deschis până la final.
+- Minimum două aprobări actuale, discuții rezolvate, CI verde pe Java 17 și 21 și PR integrat. Abia atunci se închide taskul; trackerul sprintului rămâne deschis până la final.
 - Rezultatele au commit, comandă și condiții reale, fără cifre inventate.
 
 Aceste fișiere nu activează branch protection. Codul și package-urile sunt în engleză; documentația în română. Spring rămâne în server, DTO-urile nu depind de Jackson, iar engines nu se importă reciproc. Vezi instrucțiunile locale și docs/ai-workflow.md.
+
+Pipeline, artifacts și politica de protecție: [docs/ci-cd.md](docs/ci-cd.md). Documentele nu activează singure regula GitHub.
