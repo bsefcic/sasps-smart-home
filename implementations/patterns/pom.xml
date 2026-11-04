@@ -10,6 +10,11 @@
   <artifactId>smart-home-patterns</artifactId>
   <dependencies>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>ro.upb.sasps</groupId>
       <artifactId>smart-home-contracts</artifactId>
       <version>${project.version}</version>

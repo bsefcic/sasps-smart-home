@@ -168,12 +168,14 @@ Diagrama omite intenționat executeScene și snapshots pentru a arăta doar rela
 | Pattern | Unde și când | De ce este justificat | Echivalent baseline |
 | --- | --- | --- | --- |
 | Command | SetLightPowerCommand există; SetTargetTemperatureCommand în #5 | O acțiune devine obiect executabil, utilizabil și de scenarii | Ramificație pe tipul cererii și apel direct |
-| Adapter | VendorALightAdapter există; VendorAThermostatAdapter în #4 | Ascunde enum-ul pentru bec și unitățile de temperatură ale producătorului | Conversii și apeluri vendor în controlul direct |
+| Adapter | VendorALightAdapter și VendorAThermostatAdapter există; termostatul se conectează la engine în #5 | Ascunde enum-ul pentru bec și unitățile de temperatură ale producătorului | Conversii și apeluri vendor în controlul direct |
 | Composite | SceneCommand cu o listă de Command, țintă #6 | Permite executarea unei secvențe prin aceeași operație execute | Buclă peste lista de cereri, după prevalidare |
 | Observer | Evenimente de senzori și consumatori, plan S2 | Senzorul poate notifica automatizări fără să le cunoască pe fiecare | Actualizare și invocare centralizată |
 | Strategy | Două politici de temperatură, plan S2 | Alegerea algoritmului fără a rescrie executorul de automatizări | Alegerea politicii prin ramificații |
 
 SceneCommand este pasul de compunere S1: are numai comenzi-frunză. Nesting-ul și detectarea ciclurilor sunt extensii S2; nu construim anticipat un arbore de scenarii.
+
+`VendorALightAdapter` ascunde enum-ul `VendorALight.Power`: aplicația folosește un boolean. `VendorAThermostatAdapter` implementează interfața `Thermostat` în Celsius și ascunde unitățile Vendor A: 22.1°C devin 221 deci-grade, iar citirea împarte valoarea vendor la 10.0. Validarea prin `ContractChecks.requireTemperature` precedă conversia; o temperatură invalidă, inclusiv 22.25, NaN sau Infinity, este respinsă fără schimbarea stării. Simulatorul și adaptorul există, dar controlul termostatului prin engines și HTTP se implementează în #5.
 
 Spring DI este mecanismul comun de conectare a componentelor. Faptul că un bean are scope singleton nu reprezintă un avantaj experimental al variantei patterns. Nu adăugăm Singleton, Factory, Bridge sau alte patterns doar pentru a crește numărul lor.
 
