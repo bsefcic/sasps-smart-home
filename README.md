@@ -56,10 +56,10 @@ Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utili
 - Health, citirea stării și control on/off pentru becul living-light în ambele engines.
 - Command și Adapter în patterns; API direct în baseline.
 - Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
-- Simulator VendorAThermostat în Java simplu: temperatură inițială 200 deci-grade Celsius, interval 50–350 și stare independentă per instanță; încă neconectat la engines.
+- Simulator VendorAThermostat în Java simplu și adaptorul patterns către interfața Thermostat în Celsius; încă neconectate la engines. Simulatorul pornește la 200 deci-grade Celsius, acceptă 50–350 și păstrează stare independentă per instanță.
 - Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 21.
 
-**Funcționalități încă de implementat:** adaptorul de termostat, controlul lui în engines și scenariile plate sunt stories #4–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
+**Funcționalități încă de implementat:** controlul termostatului în engines și scenariile plate sunt stories #5–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
 
 React nu este implementat și nu este necesar pentru S1. Îl putem conecta ulterior la API; origin-urile implicite permise sunt http://localhost:5173 și http://localhost:3000. Nu sunt necesare hardware, baze de date, Docker sau chei API.
 
