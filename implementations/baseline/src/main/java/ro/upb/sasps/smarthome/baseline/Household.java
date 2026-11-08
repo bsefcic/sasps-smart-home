@@ -7,7 +7,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Database of household members and their roles, as an ordinary class without the Singleton */
+/**
+ * Database of household members and their roles, as an ordinary class without the Singleton
+ * pattern.
+ *
+ * <p>Without a proxy, access control is part of every method: the caller passes its own name as
+ * {@code requester}. Every member can read the list; only the owner can change it.
+ */
 public final class Household {
   private final Map<String, Role> members = new LinkedHashMap<>();
 
@@ -18,7 +24,8 @@ public final class Household {
   }
 
   /** Adds a new member; the household has exactly one owner, so nobody else can be added as one. */
-  public synchronized void add(String name, Role role) {
+  public synchronized void add(String requester, String name, Role role) {
+    requireOwner(requester);
     String lowerCaseName = normalize(name);
     Objects.requireNonNull(role, "role");
     if (role == Role.OWNER) {
@@ -33,7 +40,8 @@ public final class Household {
    * Changes the role of an existing member; fails if the member does not exist. The owner role is
    * moved only by {@link #transferOwnership}.
    */
-  public synchronized void changeRole(String name, Role role) {
+  public synchronized void changeRole(String requester, String name, Role role) {
+    requireOwner(requester);
     String lowerCaseName = normalize(name);
     Objects.requireNonNull(role, "role");
     if (role == Role.OWNER) {
@@ -49,7 +57,8 @@ public final class Household {
   }
 
   /** Removes a member and returns whether it existed; the owner cannot be removed. */
-  public synchronized boolean remove(String name) {
+  public synchronized boolean remove(String requester, String name) {
+    requireOwner(requester);
     String lowerCaseName = normalize(name);
     if (lowerCaseName.equals(owner())) {
       throw new IllegalArgumentException("The owner cannot be removed");
@@ -58,7 +67,8 @@ public final class Household {
   }
 
   /** Makes an existing member the owner in one atomic step; the previous owner becomes an adult. */
-  public synchronized void transferOwnership(String newOwner) {
+  public synchronized void transferOwnership(String requester, String newOwner) {
+    requireOwner(requester);
     String lowerCaseName = normalize(newOwner);
     if (!members.containsKey(lowerCaseName)) {
       throw new IllegalArgumentException("Unknown member: " + newOwner);
@@ -67,13 +77,29 @@ public final class Household {
     members.replace(lowerCaseName, Role.OWNER);
   }
 
-  public synchronized Optional<Role> roleOf(String name) {
+  public synchronized Optional<Role> roleOf(String requester, String name) {
+    requireMember(requester);
     return Optional.ofNullable(members.get(normalize(name)));
   }
 
   /** Read-only copy of the current members, in the order they were added. */
-  public synchronized Map<String, Role> members() {
+  public synchronized Map<String, Role> members(String requester) {
+    requireMember(requester);
     return Collections.unmodifiableMap(new LinkedHashMap<>(members));
+  }
+
+  private void requireOwner(String requester) {
+    if (requireMember(requester) != Role.OWNER) {
+      throw new AccessDeniedException(requester + " is not an owner");
+    }
+  }
+
+  private Role requireMember(String requester) {
+    Role role = members.get(normalize(requester));
+    if (role == null) {
+      throw new AccessDeniedException(requester + " is not a household member");
+    }
+    return role;
   }
 
   /** The single owner; the methods above keep exactly one. */
