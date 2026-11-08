@@ -44,6 +44,19 @@ class HouseholdTest {
   }
 
   @Test
+  void rejectsEveryChangeThatWouldLeaveAnythingOtherThanOneOwnerAndChangesNothing() {
+    Map<String, Role> before = household.members();
+
+    assertThrows(IllegalArgumentException.class, () -> household.add("radu", Role.OWNER));
+    assertThrows(IllegalArgumentException.class, () -> household.changeRole("mihai", Role.OWNER));
+    assertThrows(IllegalArgumentException.class, () -> household.changeRole("ana", Role.ADULT));
+    assertThrows(IllegalArgumentException.class, () -> household.remove("ana"));
+    assertThrows(IllegalArgumentException.class, () -> household.transferOwnership("radu"));
+
+    assertEquals(before, household.members());
+  }
+
+  @Test
   void membersCannotBeModifiedThroughTheReturnedMap() {
     assertThrows(
         UnsupportedOperationException.class, () -> household.members().put("radu", Role.OWNER));
