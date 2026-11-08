@@ -30,8 +30,9 @@ class HouseholdTest {
     Household household = new Household();
 
     assertEquals(
-        Map.of("ana", Role.OWNER, "mihai", Role.ADULT, "ioana", Role.CHILD), household.members());
-    assertEquals(List.of("ana", "mihai", "ioana"), List.copyOf(household.members().keySet()));
+        Map.of("ana", Role.OWNER, "mihai", Role.ADULT, "ioana", Role.CHILD),
+        household.members("ana"));
+    assertEquals(List.of("ana", "mihai", "ioana"), List.copyOf(household.members("ana").keySet()));
   }
 
   @Test
@@ -39,50 +40,51 @@ class HouseholdTest {
     Household first = new Household();
     Household second = new Household();
 
-    first.remove("ioana");
+    first.remove("ana", "ioana");
 
     assertNotSame(first, second);
-    assertEquals(Optional.empty(), first.roleOf("ioana"));
-    assertEquals(Optional.of(Role.CHILD), second.roleOf("ioana"));
+    assertEquals(Optional.empty(), first.roleOf("ana", "ioana"));
+    assertEquals(Optional.of(Role.CHILD), second.roleOf("ana", "ioana"));
   }
 
   @Test
   void addsChangesAndRemovesMembers() {
     Household household = new Household();
 
-    household.add("radu", Role.ADULT);
-    assertEquals(Optional.of(Role.ADULT), household.roleOf("radu"));
+    household.add("ana", "radu", Role.ADULT);
+    assertEquals(Optional.of(Role.ADULT), household.roleOf("ana", "radu"));
     assertEquals(
-        List.of("ana", "mihai", "ioana", "radu"), List.copyOf(household.members().keySet()));
+        List.of("ana", "mihai", "ioana", "radu"), List.copyOf(household.members("ana").keySet()));
 
-    household.changeRole("radu", Role.CHILD);
-    assertEquals(Optional.of(Role.CHILD), household.roleOf("radu"));
+    household.changeRole("ana", "radu", Role.CHILD);
+    assertEquals(Optional.of(Role.CHILD), household.roleOf("ana", "radu"));
 
-    assertTrue(household.remove("radu"));
-    assertEquals(Optional.empty(), household.roleOf("radu"));
-    assertFalse(household.remove("radu"));
+    assertTrue(household.remove("ana", "radu"));
+    assertEquals(Optional.empty(), household.roleOf("ana", "radu"));
+    assertFalse(household.remove("ana", "radu"));
   }
 
   @Test
   void changingTheRoleKeepsThePositionAndReAddingMovesToTheEnd() {
     Household household = new Household();
 
-    household.changeRole("mihai", Role.CHILD);
-    assertEquals(List.of("ana", "mihai", "ioana"), List.copyOf(household.members().keySet()));
+    household.changeRole("ana", "mihai", Role.CHILD);
+    assertEquals(List.of("ana", "mihai", "ioana"), List.copyOf(household.members("ana").keySet()));
 
-    household.remove("mihai");
-    household.add("mihai", Role.ADULT);
-    assertEquals(List.of("ana", "ioana", "mihai"), List.copyOf(household.members().keySet()));
+    household.remove("ana", "mihai");
+    household.add("ana", "mihai", Role.ADULT);
+    assertEquals(List.of("ana", "ioana", "mihai"), List.copyOf(household.members("ana").keySet()));
   }
 
   @Test
   void nobodyElseCanBeAddedOrPromotedAsOwner() {
     Household household = new Household();
 
-    assertThrows(IllegalArgumentException.class, () -> household.add("radu", Role.OWNER));
-    assertThrows(IllegalArgumentException.class, () -> household.changeRole("mihai", Role.OWNER));
+    assertThrows(IllegalArgumentException.class, () -> household.add("ana", "radu", Role.OWNER));
+    assertThrows(
+        IllegalArgumentException.class, () -> household.changeRole("ana", "mihai", Role.OWNER));
 
-    assertEquals(INITIAL, household.members());
+    assertEquals(INITIAL, household.members("ana"));
   }
 
   @ParameterizedTest
@@ -90,40 +92,42 @@ class HouseholdTest {
   void theOwnerCannotBeRemovedOrDemoted(String owner) {
     Household household = new Household();
 
-    assertThrows(IllegalArgumentException.class, () -> household.remove(owner));
-    assertThrows(IllegalArgumentException.class, () -> household.changeRole(owner, Role.ADULT));
+    assertThrows(IllegalArgumentException.class, () -> household.remove("ana", owner));
+    assertThrows(
+        IllegalArgumentException.class, () -> household.changeRole("ana", owner, Role.ADULT));
 
-    assertEquals(INITIAL, household.members());
+    assertEquals(INITIAL, household.members("ana"));
   }
 
   @Test
   void transferringOwnershipMakesThePreviousOwnerAnAdult() {
     Household household = new Household();
 
-    household.transferOwnership("Mihai");
+    household.transferOwnership("ana", "Mihai");
 
     assertEquals(
-        Map.of("ana", Role.ADULT, "mihai", Role.OWNER, "ioana", Role.CHILD), household.members());
-    assertTrue(household.remove("ana"));
-    assertThrows(IllegalArgumentException.class, () -> household.remove("mihai"));
+        Map.of("ana", Role.ADULT, "mihai", Role.OWNER, "ioana", Role.CHILD),
+        household.members("ana"));
+    assertThrows(IllegalArgumentException.class, () -> household.remove("mihai", "mihai"));
+    assertTrue(household.remove("mihai", "ana"));
   }
 
   @Test
   void transferringOwnershipToTheCurrentOwnerChangesNothing() {
     Household household = new Household();
 
-    household.transferOwnership("ana");
+    household.transferOwnership("ana", "ana");
 
-    assertEquals(INITIAL, household.members());
+    assertEquals(INITIAL, household.members("ana"));
   }
 
   @Test
   void transferringOwnershipToAnUnknownMemberChangesNothing() {
     Household household = new Household();
 
-    assertThrows(IllegalArgumentException.class, () -> household.transferOwnership("radu"));
+    assertThrows(IllegalArgumentException.class, () -> household.transferOwnership("ana", "radu"));
 
-    assertEquals(INITIAL, household.members());
+    assertEquals(INITIAL, household.members("ana"));
   }
 
   @Test
@@ -136,7 +140,13 @@ class HouseholdTest {
       tasks.add(
           () -> {
             for (int i = 0; i < 200; i++) {
-              household.transferOwnership(candidate);
+              for (String requester : candidates) {
+                try {
+                  household.transferOwnership(requester, candidate);
+                } catch (AccessDeniedException notTheOwner) {
+                  // only the current owner can hand the role on
+                }
+              }
             }
             return null;
           });
@@ -144,8 +154,74 @@ class HouseholdTest {
 
     runConcurrently(tasks);
 
-    long owners = household.members().values().stream().filter(role -> role == Role.OWNER).count();
+    long owners =
+        household.members("ana").values().stream().filter(role -> role == Role.OWNER).count();
     assertEquals(1, owners);
+  }
+
+  @Test
+  void theOwnerCanAddChangeAndRemoveMembers() {
+    Household household = new Household();
+
+    household.add("Ana", "radu", Role.ADULT);
+    household.changeRole("ANA", "radu", Role.CHILD);
+    assertEquals(Optional.of(Role.CHILD), household.roleOf("ana", "radu"));
+    assertTrue(household.remove("ana", "radu"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mihai", "ioana"})
+  void aMemberWhoIsNotTheOwnerCannotChangeTheListAndNothingChanges(String requester) {
+    Household household = new Household();
+
+    assertThrows(AccessDeniedException.class, () -> household.add(requester, "radu", Role.ADULT));
+    assertThrows(
+        AccessDeniedException.class, () -> household.changeRole(requester, "ioana", Role.ADULT));
+    assertThrows(AccessDeniedException.class, () -> household.remove(requester, "ioana"));
+    assertThrows(
+        AccessDeniedException.class, () -> household.transferOwnership(requester, requester));
+
+    assertEquals(INITIAL, household.members("ana"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"ana", "mihai", "ioana"})
+  void everyMemberCanReadTheList(String requester) {
+    Household household = new Household();
+
+    assertEquals(INITIAL, household.members(requester));
+    assertEquals(Optional.of(Role.OWNER), household.roleOf(requester, "ana"));
+  }
+
+  @Test
+  void someoneWhoIsNotAMemberCannotReadOrChangeAnything() {
+    Household household = new Household();
+
+    assertThrows(AccessDeniedException.class, () -> household.members("radu"));
+    assertThrows(AccessDeniedException.class, () -> household.roleOf("radu", "ana"));
+    assertThrows(AccessDeniedException.class, () -> household.add("radu", "radu", Role.ADULT));
+
+    assertEquals(INITIAL, household.members("ana"));
+  }
+
+  @Test
+  void rightsFollowTheCurrentRole() {
+    Household household = new Household();
+
+    household.transferOwnership("ana", "mihai");
+
+    assertThrows(AccessDeniedException.class, () -> household.add("ana", "radu", Role.ADULT));
+    household.add("mihai", "radu", Role.ADULT);
+    assertEquals(Optional.of(Role.ADULT), household.roleOf("mihai", "radu"));
+  }
+
+  @Test
+  void aRemovedMemberLosesAccess() {
+    Household household = new Household();
+
+    household.remove("ana", "ioana");
+
+    assertThrows(AccessDeniedException.class, () -> household.members("ioana"));
   }
 
   @ParameterizedTest
@@ -153,28 +229,29 @@ class HouseholdTest {
   void namesAreCaseInsensitive(String name) {
     Household household = new Household();
 
-    assertEquals(Optional.of(Role.OWNER), household.roleOf(name));
-    assertThrows(IllegalArgumentException.class, () -> household.add(name, Role.CHILD));
-    assertEquals(Optional.of(Role.OWNER), household.roleOf("ana"));
+    assertEquals(Optional.of(Role.OWNER), household.roleOf("ana", name));
+    assertThrows(IllegalArgumentException.class, () -> household.add("ana", name, Role.CHILD));
+    assertEquals(Optional.of(Role.OWNER), household.roleOf("ana", "ana"));
   }
 
   @Test
   void storesNamesInLowercase() {
     Household household = new Household();
 
-    household.add("Radu", Role.ADULT);
+    household.add("ana", "Radu", Role.ADULT);
 
-    assertTrue(household.members().containsKey("radu"));
-    assertFalse(household.members().containsKey("Radu"));
+    assertTrue(household.members("ana").containsKey("radu"));
+    assertFalse(household.members("ana").containsKey("Radu"));
   }
 
   @Test
   void rejectsChangingTheRoleOfAnUnknownMember() {
     Household household = new Household();
 
-    assertThrows(IllegalArgumentException.class, () -> household.changeRole("radu", Role.ADULT));
+    assertThrows(
+        IllegalArgumentException.class, () -> household.changeRole("ana", "radu", Role.ADULT));
 
-    assertEquals(Optional.empty(), household.roleOf("radu"));
+    assertEquals(Optional.empty(), household.roleOf("ana", "radu"));
   }
 
   @ParameterizedTest
@@ -183,9 +260,9 @@ class HouseholdTest {
   void rejectsInvalidNamesWithoutChangingTheMembers(String name) {
     Household household = new Household();
 
-    assertThrows(IllegalArgumentException.class, () -> household.add(name, Role.ADULT));
+    assertThrows(IllegalArgumentException.class, () -> household.add("ana", name, Role.ADULT));
 
-    assertEquals(3, household.members().size());
+    assertEquals(3, household.members("ana").size());
   }
 
   @ParameterizedTest
@@ -193,35 +270,36 @@ class HouseholdTest {
   void acceptsAnyLetterFollowedByLettersOrDigits(String name) {
     Household household = new Household();
 
-    household.add(name, Role.ADULT);
+    household.add("ana", name, Role.ADULT);
 
-    assertEquals(Optional.of(Role.ADULT), household.roleOf(name));
+    assertEquals(Optional.of(Role.ADULT), household.roleOf("ana", name));
   }
 
   @Test
   void acceptsNamesUpTo64CharactersAndRejectsLongerOnes() {
     Household household = new Household();
 
-    household.add("a".repeat(64), Role.ADULT);
+    household.add("ana", "a".repeat(64), Role.ADULT);
 
-    assertThrows(IllegalArgumentException.class, () -> household.add("a".repeat(65), Role.ADULT));
+    assertThrows(
+        IllegalArgumentException.class, () -> household.add("ana", "a".repeat(65), Role.ADULT));
   }
 
   @Test
   void rejectsANullRole() {
     Household household = new Household();
 
-    assertThrows(NullPointerException.class, () -> household.add("radu", null));
-    assertThrows(NullPointerException.class, () -> household.changeRole("ana", null));
-    assertEquals(Optional.of(Role.OWNER), household.roleOf("ana"));
+    assertThrows(NullPointerException.class, () -> household.add("ana", "radu", null));
+    assertThrows(NullPointerException.class, () -> household.changeRole("ana", "ana", null));
+    assertEquals(Optional.of(Role.OWNER), household.roleOf("ana", "ana"));
   }
 
   @Test
   void membersIsAReadOnlySnapshot() {
     Household household = new Household();
-    Map<String, Role> snapshot = household.members();
+    Map<String, Role> snapshot = household.members("ana");
 
-    household.add("radu", Role.ADULT);
+    household.add("ana", "radu", Role.ADULT);
 
     assertThrows(UnsupportedOperationException.class, () -> snapshot.put("x", Role.OWNER));
     assertFalse(snapshot.containsKey("radu"));
@@ -238,7 +316,7 @@ class HouseholdTest {
       tasks.add(
           () -> {
             for (int i = 0; i < perThread; i++) {
-              household.add("member" + thread + "x" + i, Role.ADULT);
+              household.add("ana", "member" + thread + "x" + i, Role.ADULT);
             }
             return null;
           });
@@ -246,7 +324,7 @@ class HouseholdTest {
 
     runConcurrently(tasks);
 
-    assertEquals(3 + threads * perThread, household.members().size());
+    assertEquals(3 + threads * perThread, household.members("ana").size());
   }
 
   @Test
@@ -257,7 +335,7 @@ class HouseholdTest {
       tasks.add(
           () -> {
             try {
-              household.add("radu", Role.ADULT);
+              household.add("ana", "radu", Role.ADULT);
               return true;
             } catch (IllegalArgumentException duplicate) {
               return false;
@@ -268,7 +346,7 @@ class HouseholdTest {
     long successes = runConcurrently(tasks).stream().filter(Boolean::booleanValue).count();
 
     assertEquals(1, successes);
-    assertEquals(Optional.of(Role.ADULT), household.roleOf("radu"));
+    assertEquals(Optional.of(Role.ADULT), household.roleOf("ana", "radu"));
   }
 
   private static <T> List<T> runConcurrently(List<Callable<T>> tasks) throws Exception {
