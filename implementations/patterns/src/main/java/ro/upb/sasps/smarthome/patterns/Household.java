@@ -7,8 +7,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Database of household members and their roles. */
-public enum Household {
+/**
+ * Database of household members and their roles.
+ *
+ * <p>Package-private: code outside this package reaches it only through {@link HouseholdProxy}.
+ */
+enum Household implements HouseholdMembers {
   INSTANCE;
 
   private final Map<String, Role> members = new LinkedHashMap<>();
@@ -19,35 +23,79 @@ public enum Household {
     members.put("ioana", Role.CHILD);
   }
 
+  /** Adds a new member; the household has exactly one owner, so nobody else can be added as one. */
+  @Override
   public synchronized void add(String name, Role role) {
     String lowerCaseName = normalize(name);
     Objects.requireNonNull(role, "role");
+    if (role == Role.OWNER) {
+      throw new IllegalArgumentException("The household already has an owner: " + owner());
+    }
     if (members.putIfAbsent(lowerCaseName, role) != null) {
       throw new IllegalArgumentException("Member already exists: " + name);
     }
   }
 
-  /** Changes the role of an existing member; fails if the member does not exist. */
+  /**
+   * Changes the role of an existing member; fails if the member does not exist. The owner role is
+   * moved only by {@link #transferOwnership}.
+   */
+  @Override
   public synchronized void changeRole(String name, Role role) {
     String key = normalize(name);
     Objects.requireNonNull(role, "role");
+    if (role == Role.OWNER) {
+      throw new IllegalArgumentException("Use transferOwnership to make " + name + " the owner");
+    }
+    if (key.equals(owner())) {
+      throw new IllegalArgumentException(
+          "The role of the owner changes only through transferOwnership");
+    }
     if (members.replace(key, role) == null) {
       throw new IllegalArgumentException("Unknown member: " + name);
     }
   }
 
-  /** Removes a member and returns whether it existed. */
+  /** Removes a member and returns whether it existed; the owner cannot be removed. */
+  @Override
   public synchronized boolean remove(String name) {
-    return members.remove(normalize(name)) != null;
+    String lowerCaseName = normalize(name);
+    if (lowerCaseName.equals(owner())) {
+      throw new IllegalArgumentException("The owner cannot be removed");
+    }
+    return members.remove(lowerCaseName) != null;
   }
 
+  /** Makes an existing member the owner in one atomic step; the previous owner becomes an adult. */
+  @Override
+  public synchronized void transferOwnership(String newOwner) {
+    String lowerCaseName = normalize(newOwner);
+    if (!members.containsKey(lowerCaseName)) {
+      throw new IllegalArgumentException("Unknown member: " + newOwner);
+    }
+    members.replace(owner(), Role.ADULT);
+    members.replace(lowerCaseName, Role.OWNER);
+  }
+
+  @Override
   public synchronized Optional<Role> roleOf(String name) {
     return Optional.ofNullable(members.get(normalize(name)));
   }
 
   /** Read-only copy of the current members, in the order they were added. */
+  @Override
   public synchronized Map<String, Role> members() {
     return Collections.unmodifiableMap(new LinkedHashMap<>(members));
+  }
+
+  /** The single owner; the methods above keep exactly one. */
+  private String owner() {
+    for (Map.Entry<String, Role> member : members.entrySet()) {
+      if (member.getValue() == Role.OWNER) {
+        return member.getKey();
+      }
+    }
+    throw new IllegalStateException("The household has no owner");
   }
 
   /** Validates the name and returns its lowercase form, used as the storage and lookup key. */
