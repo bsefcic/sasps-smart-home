@@ -10,16 +10,16 @@ import java.util.Optional;
  */
 public final class HouseholdProxy implements HouseholdMembers {
   private final HouseholdMembers target;
-  private final String actor;
+  private final String requester;
 
-  public HouseholdProxy(HouseholdMembers target, String actor) {
+  public HouseholdProxy(HouseholdMembers target, String requester) {
     this.target = Objects.requireNonNull(target, "target");
-    this.actor = Objects.requireNonNull(actor, "actor");
+    this.requester = Objects.requireNonNull(requester, "requester");
   }
 
   /** The household of the application, as seen by the given member. */
-  public static HouseholdProxy forMember(String actor) {
-    return new HouseholdProxy(Household.INSTANCE, actor);
+  public static HouseholdProxy forMember(String requester) {
+    return new HouseholdProxy(Household.INSTANCE, requester);
   }
 
   @Override
@@ -72,13 +72,13 @@ public final class HouseholdProxy implements HouseholdMembers {
 
   private void requireOwner() {
     if (requireMember() != Role.OWNER) {
-      throw new AccessDeniedException(actor + " is not an owner");
+      throw new AccessDeniedException(requester + " is not an owner");
     }
   }
 
   private Role requireMember() {
     return target
-        .roleOf(actor)
-        .orElseThrow(() -> new AccessDeniedException(actor + " is not a household member"));
+        .roleOf(requester)
+        .orElseThrow(() -> new AccessDeniedException(requester + " is not a household member"));
   }
 }

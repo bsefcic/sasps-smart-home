@@ -32,21 +32,21 @@ class HouseholdProxyTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"mihai", "ioana"})
-  void aMemberWhoIsNotAnOwnerCannotChangeTheListAndNothingChanges(String actor) {
-    HouseholdMembers member = new HouseholdProxy(household, actor);
+  void aMemberWhoIsNotAnOwnerCannotChangeTheListAndNothingChanges(String requester) {
+    HouseholdMembers member = new HouseholdProxy(household, requester);
 
     assertThrows(AccessDeniedException.class, () -> member.add("radu", Role.ADULT));
     assertThrows(AccessDeniedException.class, () -> member.changeRole("ioana", Role.OWNER));
     assertThrows(AccessDeniedException.class, () -> member.remove("ana"));
-    assertThrows(AccessDeniedException.class, () -> member.transferOwnership(actor));
+    assertThrows(AccessDeniedException.class, () -> member.transferOwnership(requester));
 
     assertEquals(INITIAL, household.members());
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"ana", "mihai", "ioana"})
-  void everyMemberCanReadTheList(String actor) {
-    HouseholdMembers member = new HouseholdProxy(household, actor);
+  void everyMemberCanReadTheList(String requester) {
+    HouseholdMembers member = new HouseholdProxy(household, requester);
 
     assertEquals(INITIAL, member.members());
     assertEquals(Optional.of(Role.OWNER), member.roleOf("ana"));
@@ -102,7 +102,7 @@ class HouseholdProxyTest {
   }
 
   @Test
-  void rejectsMissingTargetOrActor() {
+  void rejectsMissingTargetOrRequester() {
     assertThrows(NullPointerException.class, () -> new HouseholdProxy(null, "ana"));
     assertThrows(NullPointerException.class, () -> new HouseholdProxy(household, null));
   }
