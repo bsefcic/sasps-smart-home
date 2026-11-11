@@ -29,8 +29,9 @@ abstract class HttpContractTest {
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
   @BeforeEach
-  void resetLight() throws Exception {
+  void resetDevices() throws Exception {
     assertEquals(200, post("/commands", light(false)).statusCode());
+    assertEquals(200, post("/commands", temperature("living-thermostat", 20)).statusCode());
   }
 
   @Test
@@ -40,6 +41,12 @@ abstract class HttpContractTest {
     assertEquals("living-light", devices.get(0).get("id").textValue());
     assertEquals("light", devices.get(0).get("kind").textValue());
     assertFalse(devices.get(0).get("power").booleanValue());
+    assertEquals(2, devices.size());
+    assertEquals("living-thermostat", devices.get(1).get("id").textValue());
+    assertEquals("thermostat", devices.get(1).get("kind").textValue());
+    assertEquals(20.0, devices.get(1).get("targetTemperature").doubleValue());
+    assertFalse(devices.get(0).has("targetTemperature"));
+    assertFalse(devices.get(1).has("power"));
   }
 
   @Test
@@ -104,18 +111,114 @@ abstract class HttpContractTest {
         "INVALID_TEMPERATURE");
   }
 
+  @ParameterizedTest
+  @ValueSource(doubles = {5.0, 35.0, 22.1})
+  void temperaturePersistsAcrossRequests(double value) throws Exception {
+    for (int repeat = 0; repeat < 2; repeat++) {
+      HttpResponse<String> response = post("/commands", temperature("living-thermostat", value));
+      assertEquals(200, response.statusCode());
+      assertTrue(json(response).get("ok").booleanValue());
+      assertEquals(1, json(response).get("executedCommands").intValue());
+      assertEquals(
+          value,
+          json(response)
+              .get("snapshot")
+              .get("devices")
+              .get(1)
+              .get("targetTemperature")
+              .doubleValue());
+      assertEquals(
+          value, json(get("/home")).get("devices").get(1).get("targetTemperature").doubleValue());
+    }
+  }
+
   @Test
-  void validFutureFeaturesAreExplicitlyNotImplementedInStarter() throws Exception {
+  void inventoryErrorsDoNotMutateState() throws Exception {
+    post("/commands", light(true));
+    post("/commands", temperature("living-thermostat", 22.1));
+    String before = get("/home").body();
+    assertError(post("/commands", temperature("missing", 22)), 404, "UNKNOWN_DEVICE");
+    assertEquals(before, get("/home").body());
+    assertError(post("/commands", temperature("living-light", 22)), 422, "INCOMPATIBLE_DEVICE");
+    assertEquals(before, get("/home").body());
     assertError(
-        post(
-            "/commands",
-            "{\"type\":\"set-target-temperature\",\"deviceId\":\"living-thermostat\",\"temperature\":22}"),
-        501,
-        "NOT_IMPLEMENTED");
-    assertError(
-        post("/scenes/execute", "{\"name\":\"leave-home\",\"commands\":[" + light(false) + "]}"),
-        501,
-        "NOT_IMPLEMENTED");
+        post("/commands", light(true).replace("living-light", "living-thermostat")),
+        422,
+        "INCOMPATIBLE_DEVICE");
+    assertEquals(before, get("/home").body());
+  }
+
+  @Test
+  void executesMixedScenesInOrderAndReturnsFinalSnapshot() throws Exception {
+    String payload =
+        "{\"name\":\"leave-home\",\"commands\":["
+            + light(true)
+            + ","
+            + temperature("living-thermostat", 22.1)
+            + ","
+            + light(false)
+            + ","
+            + temperature("living-thermostat", 18)
+            + "]}";
+    HttpResponse<String> response = post("/scenes/execute", payload);
+    assertEquals(200, response.statusCode());
+    assertTrue(json(response).get("ok").booleanValue());
+    assertEquals(4, json(response).get("executedCommands").intValue());
+    assertEquals(json(get("/home")), json(response).get("snapshot"));
+    assertFalse(json(response).get("snapshot").get("devices").get(0).get("power").booleanValue());
+    assertEquals(
+        18,
+        json(response)
+            .get("snapshot")
+            .get("devices")
+            .get(1)
+            .get("targetTemperature")
+            .doubleValue());
+  }
+
+  @Test
+  void sceneInventoryErrorsAreIndexedAndHaveNoEffects() throws Exception {
+    String[] invalid = {
+      light(true).replace("living-light", "missing"),
+      temperature("missing", 18),
+      light(true).replace("living-light", "living-thermostat"),
+      temperature("living-light", 18)
+    };
+    for (int kind = 0; kind < invalid.length; kind++) {
+      for (int index = 0; index < 3; index++) {
+        List<String> commands =
+            new java.util.ArrayList<>(List.of(light(true), temperature("living-thermostat", 18)));
+        commands.add(index, invalid[kind]);
+        String before = get("/home").body();
+        HttpResponse<String> response =
+            post(
+                "/scenes/execute",
+                "{\"name\":\"invalid\",\"commands\":[" + String.join(",", commands) + "]}");
+        assertError(
+            response, kind < 2 ? 404 : 422, kind < 2 ? "UNKNOWN_DEVICE" : "INCOMPATIBLE_DEVICE");
+        assertEquals(index, json(response).get("error").get("commandIndex").intValue());
+        assertFalse(json(response).has("snapshot"));
+        assertFalse(json(response).has("executedCommands"));
+        assertEquals(before, get("/home").body());
+      }
+    }
+  }
+
+  @Test
+  void acceptsOneAndFiftyCommandsButRejectsFiftyOne() throws Exception {
+    for (int count : new int[] {1, 50, 51}) {
+      String before = get("/home").body();
+      String commands = String.join(",", java.util.Collections.nCopies(count, light(true)));
+      HttpResponse<String> response =
+          post("/scenes/execute", "{\"name\":\"boundary\",\"commands\":[" + commands + "]}");
+      if (count <= 50) {
+        assertEquals(200, response.statusCode());
+        assertEquals(count, json(response).get("executedCommands").intValue());
+      } else {
+        assertError(response, 400, "INVALID_SCENE");
+        assertEquals(before, get("/home").body());
+      }
+    }
   }
 
   @Test
@@ -176,6 +279,14 @@ abstract class HttpContractTest {
     assertEquals(
         "http://localhost:5173",
         response.headers().firstValue("Access-Control-Allow-Origin").orElseThrow());
+  }
+
+  private static String temperature(String id, double value) {
+    return "{\"type\":\"set-target-temperature\",\"deviceId\":\""
+        + id
+        + "\",\"temperature\":"
+        + value
+        + "}";
   }
 
   private static String light(boolean power) {

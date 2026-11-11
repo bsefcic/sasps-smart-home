@@ -3,8 +3,8 @@ info:
   title: SASPS Smart Home API
   version: 1.0.0
   description: >-
-    Contract v1. Starter implements light control and status. Valid temperature
-    and scene requests return explicit 501 until Sprint 1 stories 5 and 6.
+    Contract v1. Implements light and thermostat control, status, and flat scenes.
+    All scene commands are validated before execution; invalid input has no partial effects.
 servers:
   - url: http://127.0.0.1:8080
     description: patterns (default)
@@ -47,7 +47,6 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
-        '501': {$ref: '#/components/responses/Error'}
         '415': {$ref: '#/components/responses/Error'}
         '500': {$ref: '#/components/responses/Error'}
   /api/v1/scenes/execute:
@@ -63,7 +62,6 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
-        '501': {$ref: '#/components/responses/Error'}
         '415': {$ref: '#/components/responses/Error'}
         '500': {$ref: '#/components/responses/Error'}
 components:
@@ -137,7 +135,7 @@ components:
       properties:
         devices:
           type: array
-          description: Sorted by id; starter has one light, target S1 adds thermostat
+          description: Sorted by id; contains living-light and living-thermostat
           items:
             oneOf:
               - {$ref: '#/components/schemas/LightSnapshot'}
