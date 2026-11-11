@@ -22,7 +22,7 @@ Primul server folosește patterns pe 127.0.0.1:8080; al doilea baseline pe 127.0
 | POST /api/v1/commands | Command | 200, ExecutionResponse |
 | POST /api/v1/scenes/execute | SceneRequest | 200, ExecutionResponse |
 
-POST folosește Content-Type: application/json. OpenAPI este versionat în `server/src/main/resources/static/openapi.yaml` și servit la `/openapi.yaml`. Fișierul include și comportamentul-țintă al stories încă neimplementate.
+POST folosește Content-Type: application/json. OpenAPI este versionat în `server/src/main/resources/static/openapi.yaml` și servit la `/openapi.yaml`. Fișierul descrie controlul manual și scenariile plate implementate.
 
 ### Comenzi — exact aceste câmpuri
 
@@ -60,7 +60,7 @@ O listă invalidă nu schimbă nimic. S1 nu simulează defecte ale hardware-ului
 {"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true}]}}
 ```
 
-Aceasta este o comandă pe inventarul starterului. executedCommands este 1 la comandă sau lungimea listei la scenariu. snapshot este starea de după execuție, capturată în aceeași secțiune sincronizată. Câmpurile suplimentare de variantă/timestamp nu se adaugă: ambele servere oferă același format.
+Exemplul de mai sus ilustrează doar becul; snapshot-ul curent include și termostatul. executedCommands este 1 la comandă sau lungimea listei la scenariu. snapshot este starea de după execuție, capturată în aceeași secțiune sincronizată. Câmpurile suplimentare de variantă/timestamp nu se adaugă: ambele servere oferă același format.
 
 ### Inventarul-țintă S1 și HomeSnapshot
 
@@ -72,7 +72,7 @@ După #3–#5, ambele engines pornesc cu exact două dispozitive, ordonate cresc
 
 Un bec nu are targetTemperature; termostatul nu are power. Snapshot-urile sunt records imuabile cu o listă copiată defensiv. Setările identice repetate sunt permise, fără efecte suplimentare. Nu avem persistență, înregistrare dinamică sau multi-user.
 
-**Stadiul bootstrap-ului:** există doar living-light. Controlul valid al temperaturii și scenariile valide returnează 501 NOT_IMPLEMENTED, fără efecte. Tipurile, validarea și contractele există deja. #3–#6 completează implementarea și înlocuiesc explicit aceste răspunsuri temporare; nu considerăm funcționalitatea completă înaintea acelor stories.
+**Stadiul curent (S1-04 și S1-05):** controlul manual și scenariile plate sunt implementate în ambele engines. Întreaga listă este validată înainte de execuție; prima eroare de inventar sau compatibilitate include commandIndex, fără modificarea stării.
 
 ## Erori
 
@@ -93,7 +93,6 @@ La o comandă din scenariu adăugăm `commandIndex` zero-based în error (a doua
 | 422 | INCOMPATIBLE_DEVICE | set-target-temperature către bec sau set-light-power către termostat |
 | 405 | INVALID_REQUEST | metodă HTTP nepermisă |
 | 415 | INVALID_REQUEST | Content-Type neacceptat |
-| 501 | NOT_IMPLEMENTED | doar delimitarea temporară, documentată, a starterului |
 | 500 | INTERNAL_ERROR | eroare neașteptată; mesaj public generic |
 
 Ordinea la comandă: JSON → obiect/type → câmpuri obligatorii/permise → tipuri/ID → temperatură → inventar/compatibilitate → execuție. Codurile și statusurile sunt contractuale; mesajele de validare pot explica eroarea fără să fie parsate de client. Mesajele de inventar sunt generate prin fabricile din CommandResult.

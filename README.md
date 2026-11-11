@@ -53,13 +53,13 @@ Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utili
 ## Ce funcționează acum
 
 - Server Spring Boot 3.5.16, validare strictă a JSON-ului, erori uniforme, selectarea engine-ului și CORS configurat pentru un React local viitor.
-- Health, citirea stării și control on/off pentru becul living-light în ambele engines.
+- Health, citirea stării, control on/off pentru living-light și temperatură pentru living-thermostat în ambele engines.
 - Command și Adapter în patterns; API direct în baseline.
 - Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
-- Simulator VendorAThermostat în Java simplu și adaptorul patterns către interfața Thermostat în Celsius; încă neconectate la engines. Simulatorul pornește la 200 deci-grade Celsius, acceptă 50–350 și păstrează stare independentă per instanță.
+- Simulator VendorAThermostat în Java simplu și adaptorul patterns către interfața Thermostat în Celsius; conectate la engines prin control direct în baseline și Command/Adapter în patterns. Simulatorul pornește la 200 deci-grade Celsius, acceptă 50–350 și păstrează stare independentă per instanță.
 - Teste HTTP reale comune pentru ambele engines, inclusiv păstrarea stării și concurență; CI pe JDK 21.
 
-**Funcționalități încă de implementat:** controlul termostatului în engines și scenariile plate sunt stories #5–#6. Cererile valide de temperatură și scenarii returnează momentan **501 NOT_IMPLEMENTED**, fără efecte. Nu sunt tratate ca implementate doar pentru că există schema sau endpoint-ul.
+**S1-04 și S1-05 implementate:** control manual și scenarii plate de 1–50 comenzi în ambele engines. Scenariile se validează integral înainte de execuție; ID-urile necunoscute sau incompatibile nu lasă efecte parțiale, iar eroarea include commandIndex. Ordinea este respectată; ultima setare a unui dispozitiv rămâne în stare.
 
 React nu este implementat și nu este necesar pentru S1. Îl putem conecta ulterior la API; origin-urile implicite permise sunt http://localhost:5173 și http://localhost:3000. Nu sunt necesare hardware, baze de date, Docker sau chei API.
 

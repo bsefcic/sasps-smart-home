@@ -5,7 +5,9 @@ public interface SmartHome {
 
   HomeSnapshot getSnapshot();
 
-  /** Stage boundary: implemented separately in Sprint 1 story #6. */
+  /**
+   * Executes a flat scene after validating every command, without partial effects on invalid input.
+   */
   default CommandResult executeScene(SceneRequest scene) {
     return CommandResult.failure(
         ErrorCode.NOT_IMPLEMENTED, "Scene execution is not implemented yet.");

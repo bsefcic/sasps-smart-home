@@ -17,13 +17,13 @@ Scopul SASPS este să comparăm costul și beneficiile acestor alegeri: cât cod
 | Zonă | Implementat acum | Ținta Sprintului 1 | După S1 |
 | --- | --- | --- | --- |
 | Aplicație | Java 21, Spring Boot, API REST și OpenAPI static | Păstrăm aceeași infrastructură | React este opțional |
-| Dispozitive | Bec Vendor A, on/off | Bec și termostat Vendor A; temperatură în Celsius | Al doilea producător în S2 |
-| Comenzi | Controlul becului în ambele engines | Control identic pentru ambele dispozitive | Extensii rezervate evaluării |
-| Scenarii | Tipuri și validări; execuția validă întoarce 501 | Listă plată de 1–50 comenzi, validată integral înainte de execuție | Scenarii imbricate în S2 |
-| Patterns | Command și Adapter pentru bec | Command, Adapter și compunere prin SceneCommand | Observer și Strategy în S2 |
+| Dispozitive | Bec și termostat Vendor A, 20.0°C inițial | Bec și termostat Vendor A; temperatură în Celsius | Al doilea producător în S2 |
+| Comenzi | Controlul becului și termostatului în ambele engines | Control identic pentru ambele dispozitive | Extensii rezervate evaluării |
+| Scenarii | Scenarii plate, prevalidate integral, executate în ordine | Listă plată de 1–50 comenzi, validată integral înainte de execuție | Scenarii imbricate în S2 |
+| Patterns | Command și Adapter pentru bec și termostat; SceneCommand pentru scenarii | Command, Adapter și compunere prin SceneCommand | Observer și Strategy în S2 |
 | Evaluare | Teste comune core și HTTP; CI | Contor LOC, măsurători inițiale și demo | Pilot AI în S2, evaluare finală în S3 |
 
-**Termostatul și execuția scenariilor nu sunt încă funcționale.** Tipurile există, dar cererile valide pentru aceste features întorc explicit `501 NOT_IMPLEMENTED`. Diagramele marcate „țintă S1” descriu implementarea de realizat, nu cod deja livrat.
+**Controlul manual al termostatului este implementat (S1-04).** Baseline folosește direct VendorAThermostat, iar patterns folosește SetTargetTemperatureCommand și VendorAThermostatAdapter. Scenariile sunt implementate (S1-05): baseline validează integral și apoi execută prin buclă; patterns validează și construiește comenzile înainte de delegarea către SceneCommand. Diagramele marcate „țintă S1” descriu implementarea de realizat, nu cod deja livrat.
 
 Planul S2 este direcția de extindere din [scope](scope.md). API-urile noi pentru senzori, automatizări și nesting se fixează la planificarea S2. Nu le inventăm în stories S1. Acestea sunt decizii ale echipei, nu cerințe suplimentare atribuite profesorului.
 
@@ -54,7 +54,7 @@ Nu sunt microservicii și nu comunică între ele. Sunt două rulări independen
 
 `HomeConfiguration` citește `smart-home.variant` la startup și expune o singură instanță `SmartHome`: `PatternsHome` sau `BaselineHome`. Alegerea nu se schimbă prin request. Varianta implicită este patterns; o valoare necunoscută oprește pornirea.
 
-Fiecare proces păstrează o singură casă în memorie; restartul resetează starea. În ținta S1, inventarul inițial este `living-light` oprit și `living-thermostat` la 20.0°C. În starter există doar becul.
+Fiecare proces păstrează o singură casă în memorie; restartul resetează starea. În ținta S1, inventarul inițial este `living-light` oprit și `living-thermostat` la 20.0°C. În implementarea curentă există ambele dispozitive.
 
 Nu avem DB, broker, conturi, cloud sau hardware în MVP. Un eventual React este doar un client al API-ului; nu schimbă engines.
 
@@ -119,7 +119,6 @@ sequenceDiagram
 | --- | --- | --- |
 | JSON / valori | Câmp lipsă, tip greșit, temperatură invalidă | RequestMapper și constructorii contractelor; ApiErrorHandler produce HTTP |
 | Inventar / compatibilitate | ID necunoscut; comandă de temperatură către bec | Engine-ul produce CommandResult; serverul mapează eroarea |
-| Feature încă nelivrat | Control termostat sau scenariu valid în starter | Engine-ul întoarce NOT_IMPLEMENTED, HTTP 501 |
 | Execuție reușită | Becul este pornit | HomeSession produce răspunsul cu snapshot |
 
 Lista exactă de statusuri și precedența validărilor sunt în [contractul v1](contracts-v1.md#erori).

@@ -14,13 +14,13 @@ Content-Type: application/json
 
 {"type":"set-light-power","deviceId":"living-light","power":true}
 
-### Temperatură — 501 în starter, 200 după taskul #5
+### Temperatură — 200
 POST {{baseUrl}}/api/v1/commands
 Content-Type: application/json
 
 {"type":"set-target-temperature","deviceId":"living-thermostat","temperature":22}
 
-### Scenariu — 501 în starter, 200 după taskul #6
+### Scenariu — 200
 POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
 
