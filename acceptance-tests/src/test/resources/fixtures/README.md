@@ -13,5 +13,9 @@ Aceste fișiere sunt date reutilizabile; regulile complete sunt în docs/contrac
 | errors/invalid-temperature.json, invalid-precision.json | 422 INVALID_TEMPERATURE |
 | errors/missing-power.json | 400 INVALID_REQUEST |
 | errors/empty-scene.json | 400 INVALID_SCENE |
+| scenes/evening.json | 200 executedCommands=3, bec pornit și temperatură 23 |
+| scenes/unknown-device-after-valid.json | 404 UNKNOWN_DEVICE, commandIndex=2, fără efecte |
+| scenes/incompatible-device-after-valid.json | 422 INCOMPATIBLE_DEVICE, commandIndex=1, fără efecte |
+| scenes/missing-power-after-valid.json | 400 INVALID_REQUEST, commandIndex=1, fără efecte |
 
 `responses/s1-initial-home.json` descrie inventarul inițial S1. Suita HTTP folosește aceste fișiere pentru ambele engines, iar exemplele REST trimit aceleași cereri JSON.

@@ -73,3 +73,27 @@ POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
 
 < ../../acceptance-tests/src/test/resources/fixtures/scenes/invalid-middle.json
+
+### Seară, ultima temperatură câștigă — 200
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/evening.json
+
+### Dispozitiv necunoscut în scenariu — 404
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/unknown-device-after-valid.json
+
+### Dispozitiv incompatibil în scenariu — 422
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/incompatible-device-after-valid.json
+
+### Câmp obligatoriu lipsă într-un scenariu — 400
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/missing-power-after-valid.json

@@ -54,7 +54,8 @@ abstract class HttpContractTest {
     "commands/light-on.json, /commands, false, 1, true, 20.0",
     "commands/light-off.json, /commands, true, 1, false, 20.0",
     "commands/temperature-22.json, /commands, true, 1, true, 22.0",
-    "scenes/leave-home.json, /scenes/execute, true, 2, false, 18.0"
+    "scenes/leave-home.json, /scenes/execute, true, 2, false, 18.0",
+    "scenes/evening.json, /scenes/execute, false, 3, true, 23.0"
   })
   void executesReferenceFixtures(
       String file,
@@ -91,7 +92,10 @@ abstract class HttpContractTest {
     "errors/invalid-precision.json, /commands, 422, INVALID_TEMPERATURE,",
     "errors/missing-power.json, /commands, 400, INVALID_REQUEST,",
     "errors/empty-scene.json, /scenes/execute, 400, INVALID_SCENE,",
-    "scenes/invalid-middle.json, /scenes/execute, 422, INVALID_TEMPERATURE, 1"
+    "scenes/invalid-middle.json, /scenes/execute, 422, INVALID_TEMPERATURE, 1",
+    "scenes/unknown-device-after-valid.json, /scenes/execute, 404, UNKNOWN_DEVICE, 2",
+    "scenes/incompatible-device-after-valid.json, /scenes/execute, 422, INCOMPATIBLE_DEVICE, 1",
+    "scenes/missing-power-after-valid.json, /scenes/execute, 400, INVALID_REQUEST, 1"
   })
   void rejectsReferenceFixturesWithoutChangingState(
       String file, String path, int status, String code, Integer commandIndex) throws Exception {
