@@ -80,6 +80,8 @@ Structură Java standard: src/main/java, src/test/java și src/test/resources. N
 
 ## Verificări
 
+Matricea comună pentru ambele engines și limitele guard-ului arhitectural sunt descrise în [docs/testing.md](docs/testing.md).
+
 - `./mvnw clean verify`: compilare strictă, teste, packaging și formatare Java.
 - `./mvnw spotless:apply`: formatare automată Java.
 - `./mvnw test`: compilare și teste, fără toate verificările verify.
