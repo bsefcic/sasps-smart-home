@@ -44,6 +44,14 @@
     </dependency>
   </dependencies>
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+      <testResource>
+        <directory>${project.basedir}/../acceptance-tests/src/test/resources</directory>
+      </testResource>
+    </testResources>
     <finalName>smart-home-server</finalName>
     <plugins>
       <plugin>

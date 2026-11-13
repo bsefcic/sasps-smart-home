@@ -12,28 +12,88 @@ GET {{baseUrl}}/api/v1/home
 POST {{baseUrl}}/api/v1/commands
 Content-Type: application/json
 
-{"type":"set-light-power","deviceId":"living-light","power":true}
+< ../../acceptance-tests/src/test/resources/fixtures/commands/light-on.json
 
-### Temperatură — 200
+### Temperatură la 22°C — 200
 POST {{baseUrl}}/api/v1/commands
 Content-Type: application/json
 
-{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":22}
+< ../../acceptance-tests/src/test/resources/fixtures/commands/temperature-22.json
 
-### Scenariu — 200
+### Scenariu leave-home — 200
 POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
 
-{"name":"leave-home","commands":[{"type":"set-light-power","deviceId":"living-light","power":false},{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":18}]}
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/leave-home.json
 
-### Device necunoscut — 404
+### Oprire bec — 200
 POST {{baseUrl}}/api/v1/commands
 Content-Type: application/json
 
-{"type":"set-light-power","deviceId":"missing","power":true}
+< ../../acceptance-tests/src/test/resources/fixtures/commands/light-off.json
 
-### Scenariu invalid — 422, commandIndex 1, fără modificări
+### Câmp power lipsă — 400
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/errors/missing-power.json
+
+### Scenariu gol — 400
 POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
 
-{"name":"invalid-middle","commands":[{"type":"set-light-power","deviceId":"living-light","power":true},{"type":"set-target-temperature","deviceId":"living-thermostat","temperature":100}]}
+< ../../acceptance-tests/src/test/resources/fixtures/errors/empty-scene.json
+
+### Dispozitiv necunoscut — 404
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/errors/unknown-device.json
+
+### Dispozitiv incompatibil — 422
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/errors/incompatible-device.json
+
+### Temperatură în afara intervalului — 422
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/errors/invalid-temperature.json
+
+### Precizie invalidă — 422
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/errors/invalid-precision.json
+
+### Scenariu invalid cu commandIndex 1 — 422
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/invalid-middle.json
+
+### Seară, ultima temperatură câștigă — 200
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/evening.json
+
+### Dispozitiv necunoscut în scenariu — 404
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/unknown-device-after-valid.json
+
+### Dispozitiv incompatibil în scenariu — 422
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/incompatible-device-after-valid.json
+
+### Câmp obligatoriu lipsă într-un scenariu — 400
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/scenes/missing-power-after-valid.json

@@ -48,7 +48,7 @@ Pentru PowerShell poți folosi:
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/commands -ContentType application/json -Body '{"type":"set-light-power","deviceId":"living-light","power":true}'
 ```
 
-Mai multe exemple: [docs/http/smart-home.http](docs/http/smart-home.http), utilizabil în IntelliJ HTTP Client sau VS Code REST Client.
+[Exemplele REST](docs/http/smart-home.http) folosesc aceleași fișiere JSON ca suita HTTP. Rulează-le în IntelliJ HTTP Client sau VS Code REST Client pe portul 8080 pentru patterns, apoi schimbă `baseUrl` la portul 8081 pentru baseline. Exemplele acoperă starea casei, becul, termostatul și scenariile. Erorile 400/404/422 păstrează starea, iar erorile dintr-o comandă a scenariului includ indexul de la zero.
 
 ## Ce funcționează acum
 

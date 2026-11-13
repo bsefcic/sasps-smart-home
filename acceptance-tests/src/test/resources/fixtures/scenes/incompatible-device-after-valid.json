@@ -1,0 +1,15 @@
+{
+  "name": "incompatible-device-after-valid",
+  "commands": [
+    {
+      "type": "set-light-power",
+      "deviceId": "living-light",
+      "power": true
+    },
+    {
+      "type": "set-target-temperature",
+      "deviceId": "living-light",
+      "temperature": 22
+    }
+  ]
+}
