@@ -7,10 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,9 +21,11 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.io.ClassPathResource;
 
 abstract class HttpContractTest {
   @LocalServerPort int port;
@@ -35,39 +40,78 @@ abstract class HttpContractTest {
   }
 
   @Test
-  void exposesHealthAndAnImmutableSnapshot() throws Exception {
-    assertEquals("UP", json(get("/health")).get("status").textValue());
-    JsonNode devices = json(get("/home")).get("devices");
-    assertEquals("living-light", devices.get(0).get("id").textValue());
-    assertEquals("light", devices.get(0).get("kind").textValue());
-    assertFalse(devices.get(0).get("power").booleanValue());
-    assertEquals(2, devices.size());
-    assertEquals("living-thermostat", devices.get(1).get("id").textValue());
-    assertEquals("thermostat", devices.get(1).get("kind").textValue());
-    assertEquals(20.0, devices.get(1).get("targetTemperature").doubleValue());
-    assertFalse(devices.get(0).has("targetTemperature"));
-    assertFalse(devices.get(1).has("power"));
+  void exposesHealthAndTheReferenceInventory() throws Exception {
+    HttpResponse<String> health = get("/health");
+    assertEquals(200, health.statusCode());
+    assertEquals(mapper.readTree("{\"status\":\"UP\"}"), json(health));
+    HttpResponse<String> home = get("/home");
+    assertEquals(200, home.statusCode());
+    assertEquals(mapper.readTree(fixture("responses/s1-initial-home.json")), json(home));
   }
 
-  @Test
-  void keepsStateAcrossRequestsAndCapturesCommandSnapshot() throws Exception {
-    HttpResponse<String> response = post("/commands", light(true));
-    assertEquals(200, response.statusCode());
-    JsonNode result = json(response);
-    assertTrue(result.get("ok").booleanValue());
-    assertEquals(1, result.get("executedCommands").intValue());
-    assertTrue(result.get("snapshot").get("devices").get(0).get("power").booleanValue());
-    assertTrue(json(get("/home")).get("devices").get(0).get("power").booleanValue());
+  @ParameterizedTest
+  @CsvSource({
+    "commands/light-on.json, /commands, false, 1, true, 20.0",
+    "commands/light-off.json, /commands, true, 1, false, 20.0",
+    "commands/temperature-22.json, /commands, true, 1, true, 22.0",
+    "scenes/leave-home.json, /scenes/execute, true, 2, false, 18.0",
+    "scenes/evening.json, /scenes/execute, false, 3, true, 23.0"
+  })
+  void executesReferenceFixtures(
+      String file,
+      String path,
+      boolean initialPower,
+      int count,
+      boolean power,
+      double targetTemperature)
+      throws Exception {
+    if (initialPower) {
+      assertEquals(200, post("/commands", fixture("commands/light-on.json")).statusCode());
+    }
+    HttpResponse<String> response = post(path, fixture(file));
+    assertEquals(200, response.statusCode(), response.body());
+    JsonNode expected = mapper.readTree(fixture("responses/s1-initial-home.json"));
+    var devices = expected.get("devices");
+    ((ObjectNode) devices.get(0)).put("power", power);
+    ((ObjectNode) devices.get(1)).put("targetTemperature", targetTemperature);
+    assertEquals(
+        mapper
+            .createObjectNode()
+            .put("ok", true)
+            .put("executedCommands", count)
+            .set("snapshot", expected),
+        json(response));
+    assertEquals(expected, json(get("/home")));
   }
 
-  @Test
-  void unknownDeviceIs404AndDoesNotMutate() throws Exception {
-    String before = get("/home").body();
-    HttpResponse<String> response =
-        post("/commands", "{\"type\":\"set-light-power\",\"deviceId\":\"missing\",\"power\":true}");
-    assertError(response, 404, "UNKNOWN_DEVICE");
-    assertEquals(before, get("/home").body());
-    assertNull(json(response).get("error").get("commandIndex"));
+  @ParameterizedTest
+  @CsvSource({
+    "errors/unknown-device.json, /commands, 404, UNKNOWN_DEVICE,",
+    "errors/incompatible-device.json, /commands, 422, INCOMPATIBLE_DEVICE,",
+    "errors/invalid-temperature.json, /commands, 422, INVALID_TEMPERATURE,",
+    "errors/invalid-precision.json, /commands, 422, INVALID_TEMPERATURE,",
+    "errors/missing-power.json, /commands, 400, INVALID_REQUEST,",
+    "errors/empty-scene.json, /scenes/execute, 400, INVALID_SCENE,",
+    "scenes/invalid-middle.json, /scenes/execute, 422, INVALID_TEMPERATURE, 1",
+    "scenes/unknown-device-after-valid.json, /scenes/execute, 404, UNKNOWN_DEVICE, 2",
+    "scenes/incompatible-device-after-valid.json, /scenes/execute, 422, INCOMPATIBLE_DEVICE, 1",
+    "scenes/missing-power-after-valid.json, /scenes/execute, 400, INVALID_REQUEST, 1"
+  })
+  void rejectsReferenceFixturesWithoutChangingState(
+      String file, String path, int status, String code, Integer commandIndex) throws Exception {
+    JsonNode before = json(get("/home"));
+    HttpResponse<String> response = post(path, fixture(file));
+    assertError(response, status, code);
+    JsonNode body = json(response);
+    assertFalse(body.has("snapshot"));
+    assertFalse(body.has("executedCommands"));
+    JsonNode index = body.get("error").get("commandIndex");
+    if (commandIndex == null) {
+      assertNull(index);
+    } else {
+      assertEquals(mapper.getNodeFactory().numberNode(commandIndex.intValue()), index);
+    }
+    assertEquals(before, json(get("/home")));
   }
 
   @ParameterizedTest
@@ -224,16 +268,11 @@ abstract class HttpContractTest {
   @Test
   void validatesEverySceneInputBeforeCallingEngine() throws Exception {
     String before = get("/home").body();
-    String scene =
-        "{\"name\":\"leave-home\",\"commands\":["
-            + light(true)
-            + ",{\"type\":\"set-target-temperature\",\"deviceId\":\"living-thermostat\",\"temperature\":100}]}";
+    String scene = fixture("scenes/invalid-middle.json").replace("living-light", "missing");
     HttpResponse<String> response = post("/scenes/execute", scene);
     assertError(response, 422, "INVALID_TEMPERATURE");
     assertEquals(1, json(response).get("error").get("commandIndex").intValue());
     assertEquals(before, get("/home").body());
-    assertError(
-        post("/scenes/execute", "{\"name\":\"empty\",\"commands\":[]}"), 400, "INVALID_SCENE");
   }
 
   @Test
@@ -279,6 +318,10 @@ abstract class HttpContractTest {
     assertEquals(
         "http://localhost:5173",
         response.headers().firstValue("Access-Control-Allow-Origin").orElseThrow());
+  }
+
+  private static String fixture(String file) throws IOException {
+    return new ClassPathResource("fixtures/" + file).getContentAsString(StandardCharsets.UTF_8);
   }
 
   private static String temperature(String id, double value) {

@@ -1,0 +1,14 @@
+{
+  "name": "missing-power-after-valid",
+  "commands": [
+    {
+      "type": "set-target-temperature",
+      "deviceId": "living-thermostat",
+      "temperature": 22
+    },
+    {
+      "type": "set-light-power",
+      "deviceId": "living-light"
+    }
+  ]
+}
