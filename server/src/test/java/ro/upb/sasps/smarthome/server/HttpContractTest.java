@@ -143,8 +143,9 @@ abstract class HttpContractTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"100", "4.9", "22.25"})
+  @ValueSource(strings = {"100", "4.9", "35.1", "22.25", "1e309", "-1e309"})
   void invalidTemperatureIs422(String temperature) throws Exception {
+    String before = get("/home").body();
     assertError(
         post(
             "/commands",
@@ -153,6 +154,21 @@ abstract class HttpContractTest {
                 + "}"),
         422,
         "INVALID_TEMPERATURE");
+    assertEquals(before, get("/home").body());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"NaN", "Infinity", "-Infinity"})
+  void rejectsNonJsonNumbersAndNumericStrings(String token) throws Exception {
+    String before = get("/home").body();
+    for (String value : List.of(token, "\"" + token + "\"")) {
+      String payload =
+          "{\"type\":\"set-target-temperature\",\"deviceId\":\"living-thermostat\",\"temperature\":"
+              + value
+              + "}";
+      assertError(post("/commands", payload), 400, "INVALID_REQUEST");
+      assertEquals(before, get("/home").body());
+    }
   }
 
   @ParameterizedTest

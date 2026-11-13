@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -153,22 +154,26 @@ class HomeAcceptanceTest {
     SmartHome home = factory.get();
     home.execute(new SetTargetTemperature("living-thermostat", 22.1));
     HomeSnapshot before = home.getSnapshot();
-    List<HomeCommand> invalid =
-        List.of(
+    Map<HomeCommand, CommandResult> invalid =
+        Map.of(
             new SetLightPower("missing", true),
+            CommandResult.unknownDevice("missing"),
             new SetTargetTemperature("missing", 18),
+            CommandResult.unknownDevice("missing"),
             new SetLightPower("living-thermostat", true),
-            new SetTargetTemperature("living-light", 18));
-    for (HomeCommand bad : invalid) {
+            CommandResult.incompatibleDevice("living-thermostat", "set-light-power"),
+            new SetTargetTemperature("living-light", 18),
+            CommandResult.incompatibleDevice("living-light", "set-target-temperature"));
+    for (var entry : invalid.entrySet()) {
       for (int index = 0; index < 3; index++) {
         List<HomeCommand> commands =
             new ArrayList<>(
                 List.of(
                     new SetLightPower("living-light", true),
                     new SetTargetTemperature("living-thermostat", 18)));
-        commands.add(index, bad);
+        commands.add(index, entry.getKey());
         assertEquals(
-            home.execute(bad).atCommand(index),
+            entry.getValue().atCommand(index),
             home.executeScene(new SceneRequest("invalid", commands)));
         assertEquals(before, home.getSnapshot());
       }
