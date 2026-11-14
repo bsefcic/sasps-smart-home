@@ -36,6 +36,7 @@ public final class PatternsHome implements SmartHome {
     motionSensors.put(sensor.id(), sensor);
   }
 
+  @Override
   public CommandResult reportMotion(String sensorId, boolean motion) {
     MotionSensor sensor = motionSensors.get(sensorId);
     if (sensor == null) {

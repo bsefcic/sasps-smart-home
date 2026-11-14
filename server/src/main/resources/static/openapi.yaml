@@ -51,6 +51,23 @@ paths:
         '422': {$ref: '#/components/responses/Error'}
         '415': {$ref: '#/components/responses/Error'}
         '500': {$ref: '#/components/responses/Error'}
+  /api/v1/sensors/motion:
+    post:
+      operationId: reportMotion
+      description: >-
+        Simulated motion sensor reading. When motion starts (false to true), the light
+        of the sensor's room turns on; repeated identical readings do not trigger it again.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MotionReading'}
+      responses:
+        '200': {$ref: '#/components/responses/Execution'}
+        '400': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '415': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
   /api/v1/scenes/execute:
     post:
       operationId: executeScene
@@ -114,6 +131,13 @@ components:
         type: {type: string, enum: [set-target-temperature]}
         deviceId: {$ref: '#/components/schemas/DeviceId'}
         temperature: {$ref: '#/components/schemas/Temperature'}
+    MotionReading:
+      type: object
+      additionalProperties: false
+      required: [sensorId, motion]
+      properties:
+        sensorId: {$ref: '#/components/schemas/DeviceId'}
+        motion: {type: boolean}
     SceneRequest:
       type: object
       additionalProperties: false

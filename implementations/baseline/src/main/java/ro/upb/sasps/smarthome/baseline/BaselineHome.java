@@ -35,6 +35,7 @@ public final class BaselineHome implements SmartHome {
     motionReadings.put("living-motion", false);
   }
 
+  @Override
   public CommandResult reportMotion(String sensorId, boolean motion) {
     if (!motionSensorLights.containsKey(sensorId)) {
       return CommandResult.unknownDevice(sensorId);
