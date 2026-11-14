@@ -23,12 +23,26 @@ public final class PatternsHome implements SmartHome {
 
   private final Map<String, Thermostat> thermostats = new LinkedHashMap<>();
 
+  private final Map<String, MotionSensor> motionSensors = new LinkedHashMap<>();
+
   public PatternsHome() {
     Light light = new VendorALightAdapter(new VendorALight("living-light"));
     lights.put(light.id(), light);
     thermostats.put(
         "living-thermostat",
         new VendorAThermostatAdapter(new VendorAThermostat("living-thermostat")));
+    MotionSensor sensor = new MotionSensor("living-motion");
+    sensor.subscribe(new MotionLightAutomation(light));
+    motionSensors.put(sensor.id(), sensor);
+  }
+
+  public CommandResult reportMotion(String sensorId, boolean motion) {
+    MotionSensor sensor = motionSensors.get(sensorId);
+    if (sensor == null) {
+      return CommandResult.unknownDevice(sensorId);
+    }
+    sensor.report(motion);
+    return CommandResult.success();
   }
 
   @Override
