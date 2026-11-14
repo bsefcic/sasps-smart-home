@@ -37,6 +37,43 @@ abstract class HttpContractTest {
   void resetDevices() throws Exception {
     assertEquals(200, post("/commands", light(false)).statusCode());
     assertEquals(200, post("/commands", temperature("living-thermostat", 20)).statusCode());
+    assertEquals(200, post("/sensors/motion", motion("living-motion", false)).statusCode());
+  }
+
+  @Test
+  void motionReportedThroughTheApiTurnsOnTheLightOnce() throws Exception {
+    HttpResponse<String> response = post("/sensors/motion", motion("living-motion", true));
+
+    assertEquals(200, response.statusCode(), response.body());
+    assertTrue(json(response).get("ok").booleanValue());
+    assertTrue(json(get("/home")).get("devices").get(0).get("power").booleanValue());
+
+    post("/commands", light(false));
+    assertEquals(200, post("/sensors/motion", motion("living-motion", true)).statusCode());
+    assertFalse(json(get("/home")).get("devices").get(0).get("power").booleanValue());
+  }
+
+  @Test
+  void unknownSensorIs404WithoutChangingState() throws Exception {
+    String before = get("/home").body();
+
+    assertError(post("/sensors/motion", motion("missing", true)), 404, "UNKNOWN_DEVICE");
+    assertEquals(before, get("/home").body());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "{\"sensorId\":\"living-motion\"}",
+        "{\"sensorId\":\"living-motion\",\"motion\":\"true\"}",
+        "{\"sensorId\":\"Bad id\",\"motion\":true}",
+        "{\"sensorId\":\"living-motion\",\"motion\":true,\"extra\":1}"
+      })
+  void invalidMotionReadingIs400WithoutChangingState(String payload) throws Exception {
+    String before = get("/home").body();
+
+    assertError(post("/sensors/motion", payload), 400, "INVALID_REQUEST");
+    assertEquals(before, get("/home").body());
   }
 
   @Test
@@ -330,6 +367,10 @@ abstract class HttpContractTest {
         + "\",\"temperature\":"
         + value
         + "}";
+  }
+
+  private static String motion(String sensorId, boolean motion) {
+    return "{\"sensorId\":\"" + sensorId + "\",\"motion\":" + motion + "}";
   }
 
   private static String light(boolean power) {

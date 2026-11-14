@@ -5,6 +5,8 @@ public interface SmartHome {
 
   HomeSnapshot getSnapshot();
 
+  CommandResult reportMotion(String sensorId, boolean motion);
+
   /**
    * Executes a flat scene after validating every command, without partial effects on invalid input.
    */

@@ -49,6 +49,21 @@ public final class RequestMapper {
     }
   }
 
+  public MotionReading motionReading(JsonNode node) {
+    requireObject(node);
+    exactFields(node, Set.of("sensorId", "motion"));
+    String id = text(node, "sensorId");
+    try {
+      ContractChecks.requireDeviceId(id);
+    } catch (IllegalArgumentException exception) {
+      throw new ApiException(ErrorCode.INVALID_REQUEST, exception.getMessage());
+    }
+    if (!node.get("motion").isBoolean()) {
+      throw new ApiException(ErrorCode.INVALID_REQUEST, "motion must be a boolean");
+    }
+    return new MotionReading(id, node.get("motion").booleanValue());
+  }
+
   public SceneRequest scene(JsonNode node) {
     requireObject(node);
     exactFields(node, Set.of("name", "commands"));

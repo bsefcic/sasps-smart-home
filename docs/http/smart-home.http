@@ -97,3 +97,21 @@ POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
 
 < ../../acceptance-tests/src/test/resources/fixtures/scenes/missing-power-after-valid.json
+
+### Mișcare detectată în living, aprinde living-light — 200
+POST {{baseUrl}}/api/v1/sensors/motion
+Content-Type: application/json
+
+{"sensorId":"living-motion","motion":true}
+
+### Fără mișcare în living — 200
+POST {{baseUrl}}/api/v1/sensors/motion
+Content-Type: application/json
+
+{"sensorId":"living-motion","motion":false}
+
+### Senzor necunoscut — 404
+POST {{baseUrl}}/api/v1/sensors/motion
+Content-Type: application/json
+
+{"sensorId":"missing","motion":true}
