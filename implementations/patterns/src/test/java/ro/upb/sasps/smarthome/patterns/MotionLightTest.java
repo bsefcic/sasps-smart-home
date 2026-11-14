@@ -31,6 +31,17 @@ class MotionLightTest {
   }
 
   @Test
+  void motionThatStartsAgainTurnsTheLightOnAgain() {
+    home.reportMotion("living-motion", true);
+    home.execute(new SetLightPower("living-light", false));
+
+    home.reportMotion("living-motion", false);
+    home.reportMotion("living-motion", true);
+
+    assertTrue(lightIsOn(home));
+  }
+
+  @Test
   void noMotionLeavesTheLightOff() {
     home.reportMotion("living-motion", false);
 
