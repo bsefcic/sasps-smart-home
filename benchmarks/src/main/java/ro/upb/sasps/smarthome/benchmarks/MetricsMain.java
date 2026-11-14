@@ -98,8 +98,11 @@ public final class MetricsMain {
     } else {
       out.println("Running runtime benchmark " + RuntimeBenchmark.Config.DEFAULT + " ...");
       RuntimeBenchmark.Result runtime =
-          new RuntimeBenchmark(RuntimeBenchmark.Config.DEFAULT, RuntimeBenchmark.defaultEngines())
-              .run();
+          new RuntimeBenchmark(
+                  RuntimeBenchmark.Config.DEFAULT,
+                  RuntimeBenchmark.defaultEngines(),
+                  RuntimeBenchmark.defaultWorkloads())
+              .runBenchmarks();
       printRuntime(out, runtime);
       results = runtime;
     }
@@ -141,16 +144,23 @@ public final class MetricsMain {
   }
 
   private static void printRuntime(PrintStream out, RuntimeBenchmark.Result result) {
-    for (Map.Entry<String, RuntimeBenchmark.EngineSummary> entry : result.engines().entrySet()) {
-      RuntimeBenchmark.EngineSummary summary = entry.getValue();
-      out.printf(
-          Locale.ROOT,
-          "  %-10s median %.3f ms (min %.3f, max %.3f), %.1f ns/command%n",
-          entry.getKey(),
-          summary.medianMs(),
-          summary.minMs(),
-          summary.maxMs(),
-          summary.medianNsPerCommand());
+    for (Map.Entry<String, RuntimeBenchmark.WorkloadResult> workload :
+        result.workloads().entrySet()) {
+      out.println(workload.getKey() + ":");
+      String unit = workload.getValue().stepUnit();
+      for (Map.Entry<String, RuntimeBenchmark.EngineSummary> entry :
+          workload.getValue().engines().entrySet()) {
+        RuntimeBenchmark.EngineSummary summary = entry.getValue();
+        out.printf(
+            Locale.ROOT,
+            "  %-10s median %.3f ms (min %.3f, max %.3f), %.1f ns/%s%n",
+            entry.getKey(),
+            summary.medianMs(),
+            summary.minMs(),
+            summary.maxMs(),
+            summary.medianNsPerStep(),
+            unit);
+      }
     }
   }
 }
