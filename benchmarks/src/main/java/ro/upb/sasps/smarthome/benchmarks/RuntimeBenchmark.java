@@ -106,7 +106,8 @@ public final class RuntimeBenchmark {
         measured.put(engine.name(), toMs(measureRound(engine, workload, config.stepsPerRound())));
         names.add(engine.name());
       }
-      // add the engines to the ms map in a consistent order, instead of alternating, as they are in measured
+      /* add the engines to the ms map in a consistent order, instead of alternating,
+       * as they are in measured */
       Map<String, Double> ms = new LinkedHashMap<>();
       for (Engine engine : engines) {
         ms.put(engine.name(), measured.get(engine.name()));
