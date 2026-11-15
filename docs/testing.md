@@ -32,13 +32,13 @@ Nu există suite funcționale divergente pentru cele două engines.
 
 | Comportament | Contracte Java | Suita core comună | Suita HTTP comună |
 | --- | --- | --- | --- |
-| Inventar inițial, ordine după ID, separarea câmpurilor light/thermostat | Records de snapshot | `controlsTemperatureAndPreservesSnapshots` | `exposesHealthAndAnImmutableSnapshot` |
-| Bec on/off și stare păstrată între apeluri | `SetLightPower` | `appliesPowerCommands` | `keepsStateAcrossRequestsAndCapturesCommandSnapshot`, `executesMixedScenesInOrderAndReturnsFinalSnapshot` |
+| Inventar inițial, ordine după ID, separarea câmpurilor light/thermostat | Records de snapshot | `controlsTemperatureAndPreservesSnapshots` | `exposesHealthAndTheReferenceInventory` |
+| Bec on/off și stare păstrată între apeluri | `SetLightPower` | `appliesPowerCommands` | `executesReferenceFixtures`, `executesMixedScenesInOrderAndReturnsFinalSnapshot` |
 | Temperatură 5/35°C, pas 0.1 și repetarea aceleiași valori | `acceptsExactTemperatureBoundsAndTenths` | `controlsTemperatureAndPreservesSnapshots` | `temperaturePersistsAcrossRequests` |
 | Temperatură în afara intervalului și precizie invalidă | `rejectsInvalidTemperature` | `rejectsWrongTypesAndUnknownThermostats` | `invalidTemperatureIs422`: 422, fără modificări |
 | NaN și ±Infinity | `rejectsInvalidTemperature`: `IllegalArgumentException` | `rejectsWrongTypesAndUnknownThermostats`: respingere la construirea comenzii | `rejectsNonJsonNumbersAndNumericStrings`: tokeni JSON nevalizi sau string-uri → 400; `invalidTemperatureIs422`: ±1e309 → 422 după conversia numerică, fără modificări |
 | ID invalid, null, spații și limita 64/65 | `rejectsInvalidIds`, `deviceIdsHaveA64CharacterLimit`, pentru ambele comenzi | Validarea are loc în constructor, înaintea engine-ului | Shape-ul JSON este verificat de `rejectsMalformedOrWrongShapeWithoutMutating`; limitele exhaustive ale ID-ului sunt testate la nivel de contract |
-| Dispozitiv necunoscut și ambele incompatibilități | Rezultate comune `CommandResult` | `rejectsUnknownDeviceWithoutSideEffects`, `rejectsWrongTypesAndUnknownThermostats` | `unknownDeviceIs404AndDoesNotMutate`, `inventoryErrorsDoNotMutateState` |
+| Dispozitiv necunoscut și ambele incompatibilități | Rezultate comune `CommandResult` | `rejectsUnknownDeviceWithoutSideEffects`, `rejectsWrongTypesAndUnknownThermostats` | `rejectsReferenceFixturesWithoutChangingState`, `inventoryErrorsDoNotMutateState` |
 | Scene mixte, ordine, ultima setare câștigă | `SceneRequest` | `executesMixedScenesInOrder` | `executesMixedScenesInOrderAndReturnsFinalSnapshot` |
 | Scene de 1/50 comenzi; respingerea 0/51 | `scenesDefensivelyCopyAndHaveFixedBounds` | `executesMixedScenesInOrder` | `acceptsOneAndFiftyCommandsButRejectsFiftyOne`, `validatesEverySceneInputBeforeCallingEngine` |
 | Erori de inventar la început/mijloc/final, primul index invalid, fără efecte parțiale | `CommandResult.atCommand` | `prevalidatesEverySceneCommand`, cu rezultate așteptate explicite | `sceneInventoryErrorsAreIndexedAndHaveNoEffects` |
@@ -112,5 +112,5 @@ java -jar server/target/smart-home-server.jar --smart-home.variant=baseline --se
 
 Se rulează în două terminale. Exemplele HTTP se trimit întâi pe portul 8080, apoi pe 8081.
 Rezultatele locale nu înlocuiesc CI și cele două aprobări de la colegi diferiți de autor.
-Integrarea S1-06 poate reorganiza testele HTTP în jurul fixtures, păstrând comportamentele
-din această matrice; nu este o dependență pentru guard sau pentru suita core S1-10.
+S1-06 este integrat: testele HTTP reutilizează fixtures prin `executesReferenceFixtures`
+și `rejectsReferenceFixturesWithoutChangingState`, păstrând comportamentele din această matrice.
