@@ -1,27 +1,11 @@
 === patterns :8080 ===
-health: 200 {"status":"UP"}
 inventar: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}]}
-light-on: 200 {"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true},{"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}]}}
-temperature-22: 200 {"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true},{"id":"living-thermostat","kind":"thermostat","targetTemperature":22.0}]}}
 leave-home: 200 {"ok":true,"executedCommands":2,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}}
-stare înainte de erori: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-unknown-device: 404 {"ok":false,"error":{"code":"UNKNOWN_DEVICE","message":"Unknown device: missing"}}
-stare după unknown-device: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-invalid-middle: 422 {"ok":false,"error":{"code":"INVALID_TEMPERATURE","message":"temperature must be 5\u201335 Celsius in steps of 0.1","commandIndex":1}}
-stare după invalid-middle: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-unknown-device-after-valid: 404 {"ok":false,"error":{"code":"UNKNOWN_DEVICE","message":"Unknown device: missing","commandIndex":2}}
-stare după unknown-device-after-valid: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
+incompatible-device-after-valid: 422 {"ok":false,"error":{"code":"INCOMPATIBLE_DEVICE","message":"Device living-light does not support set-target-temperature.","commandIndex":1}}
+inventar după scena incompatibilă: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
 === baseline :8081 ===
-health: 200 {"status":"UP"}
 inventar: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}]}
-light-on: 200 {"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true},{"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}]}}
-temperature-22: 200 {"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true},{"id":"living-thermostat","kind":"thermostat","targetTemperature":22.0}]}}
 leave-home: 200 {"ok":true,"executedCommands":2,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}}
-stare înainte de erori: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-unknown-device: 404 {"ok":false,"error":{"code":"UNKNOWN_DEVICE","message":"Unknown device: missing"}}
-stare după unknown-device: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-invalid-middle: 422 {"ok":false,"error":{"code":"INVALID_TEMPERATURE","message":"temperature must be 5\u201335 Celsius in steps of 0.1","commandIndex":1}}
-stare după invalid-middle: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
-unknown-device-after-valid: 404 {"ok":false,"error":{"code":"UNKNOWN_DEVICE","message":"Unknown device: missing","commandIndex":2}}
-stare după unknown-device-after-valid: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
+incompatible-device-after-valid: 422 {"ok":false,"error":{"code":"INCOMPATIBLE_DEVICE","message":"Device living-light does not support set-target-temperature.","commandIndex":1}}
+inventar după scena incompatibilă: 200 {"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":18.0}]}
 OK: răspunsuri echivalente; starea a rămas neschimbată după fiecare eroare.

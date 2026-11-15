@@ -27,20 +27,18 @@ Așteaptă pornirea ambelor procese. Ele țin starea în memorie, separat. Repor
 
 ## Ordinea demonstrației
 
-Rulează `python3 docs/http/replay-sprint-1.py` (pe Windows, `py -3 docs/http/replay-sprint-1.py`). Scriptul folosește doar biblioteca standard Python, afișează statusul și JSON-ul fiecărei cereri, verifică rezultatele și compară răspunsurile între variante. Alternativ, trimite manual cererile indicate mai jos din [fișierul .http](http/smart-home.http), întâi pe 8080, apoi pe 8081. După `leave-home` și după fiecare eroare, citește din nou starea cu `GET /api/v1/home`.
+Rulează `python3 docs/http/replay-sprint-1.py` (pe Windows, `py -3 docs/http/replay-sprint-1.py`). Secvența implicită urmează [slide-ul 8](https://docs.google.com/presentation/d/1BR46JtfRzYi-L0v9NTtwSrE2J5pq3d83h9XBfdAA8ts/edit#slide=id.p8). Scriptul folosește doar biblioteca standard Python, afișează statusul și JSON-ul fiecărei cereri, verifică rezultatele și compară răspunsurile între variante. Alternativ, trimite manual cererile de mai jos din [fișierul .http](http/smart-home.http), întâi pe 8080, apoi pe 8081.
 
 | Pas | Cerere sub `/api/v1` | Rezultat observat pe ambele servere |
 | --- | --- | --- |
-| Health | `GET /health` | 200, `{"status":"UP"}` |
 | Inventar | `GET /home` | 200, `living-light` oprit, `living-thermostat` la 20°C |
-| `light-on` | `POST /commands` | 200, o comandă executată, bec pornit, 20°C |
-| `temperature-22` | `POST /commands` | 200, o comandă executată, bec pornit, 22°C |
-| `leave-home` | `POST /scenes/execute` | 200, două comenzi executate, bec oprit, 18°C |
-| `unknown-device` | `POST /commands` | 404 `UNKNOWN_DEVICE`, fără `commandIndex`, stare neschimbată |
-| `invalid-middle` | `POST /scenes/execute` | 422 `INVALID_TEMPERATURE`, `commandIndex=1`, stare neschimbată |
-| `unknown-device-after-valid` | `POST /scenes/execute` | 404 `UNKNOWN_DEVICE`, `commandIndex=2`, stare neschimbată |
+| Away from Home (`leave-home`) | `POST /scenes/execute` | 200, două comenzi executate, bec oprit, 18°C |
+| Dispozitiv incompatibil în scenariu (`incompatible-device-after-valid`) | `POST /scenes/execute` | 422 `INCOMPATIBLE_DEVICE`, `commandIndex=1` |
+| Inventar final | `GET /home` | 200, becul rămâne oprit, termostatul rămâne la 18°C |
 
-La ultimele două scene, prima comandă ar aprinde becul. După respingere, `GET /home` dovedește că becul a rămas oprit și termostatul la 18°C. Prima scenă arată validarea valorilor la intrarea HTTP; a doua trece de forma JSON și arată validarea inventarului în engine.
+În scena incompatibilă, prima comandă ar aprinde becul, dar a doua încearcă să-i seteze temperatura. Cererea trece validarea HTTP; implementarea respinge întreaga scenă la verificarea compatibilității. Inventarul final confirmă că nu s-a executat nici prima comandă.
+
+Pentru o repetiție mai amplă, adaugă `--extended` la comanda de replay. Modul include health, controlul separat al becului și termostatului, plus `unknown-device` (404 fără index), `invalid-middle` (422, index 1) și `unknown-device-after-valid` (404, index 2). După fiecare respingere, scriptul recitește inventarul.
 
 Încheie cu [nota de progres](progress-sprint-1.md): explică unde se află Adapter, Command și Composite și arată o valoare LOC și o mediană pentru fiecare variantă. Benchmark-ul se rulează separat de demo, fără servere pornite; la prezentare folosește rezultatele capturate.
 
