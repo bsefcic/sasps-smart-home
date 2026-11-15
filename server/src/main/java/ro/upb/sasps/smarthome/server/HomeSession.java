@@ -30,6 +30,11 @@ public final class HomeSession {
     return new ExecutionResponse(true, scene.commands().size(), home.getSnapshot());
   }
 
+  public synchronized ExecutionResponse reportMotion(MotionReading reading) {
+    requireSuccess(home.reportMotion(reading.sensorId(), reading.motion()));
+    return new ExecutionResponse(true, 1, home.getSnapshot());
+  }
+
   private static void requireSuccess(CommandResult result) {
     if (!result.ok()) {
       throw new ApiException(result.code(), result.message(), result.commandIndex());

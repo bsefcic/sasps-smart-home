@@ -35,6 +35,11 @@ public final class HomeController {
     return session.execute(mapper.command(body));
   }
 
+  @PostMapping(value = "/sensors/motion", consumes = "application/json")
+  public ExecutionResponse reportMotion(@RequestBody JsonNode body) {
+    return session.reportMotion(mapper.motionReading(body));
+  }
+
   @PostMapping(value = "/scenes/execute", consumes = "application/json")
   public ExecutionResponse executeScene(@RequestBody JsonNode body) {
     return session.executeScene(mapper.scene(body));

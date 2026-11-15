@@ -24,9 +24,28 @@ public final class BaselineHome implements SmartHome {
 
   private final Map<String, VendorAThermostat> thermostats = new LinkedHashMap<>();
 
+  private final Map<String, String> motionSensorLights = new LinkedHashMap<>();
+
+  private final Map<String, Boolean> motionReadings = new LinkedHashMap<>();
+
   public BaselineHome() {
     lights.put("living-light", new VendorALight("living-light"));
     thermostats.put("living-thermostat", new VendorAThermostat("living-thermostat"));
+    motionSensorLights.put("living-motion", "living-light");
+    motionReadings.put("living-motion", false);
+  }
+
+  @Override
+  public CommandResult reportMotion(String sensorId, boolean motion) {
+    if (!motionSensorLights.containsKey(sensorId)) {
+      return CommandResult.unknownDevice(sensorId);
+    }
+    boolean started = motion && !motionReadings.get(sensorId);
+    motionReadings.put(sensorId, motion);
+    if (started) {
+      lights.get(motionSensorLights.get(sensorId)).setPower(VendorALight.Power.ENABLED);
+    }
+    return CommandResult.success();
   }
 
   @Override
