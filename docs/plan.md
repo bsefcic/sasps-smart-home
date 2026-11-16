@@ -14,7 +14,7 @@ Data finală se confirmă cu calendarul oficial. Disponibilitatea și absențele
 
 Java 21, Spring Boot 3.5.16 în server, Maven Wrapper, două engines independente și o interfață REST comună. [Contractul v1](contracts-v1.md) fixează endpoints, forme JSON, erori, inventar, scenarii și API Vendor A pentru întreg Sprintul 1. [Ghidul taskurilor](tasks-sprint-1.md) conține pași și rezultate, fără taskuri de «alegere a contractelor».
 
-React rămâne opțional. Bootstrap-ul Spring livrează contractele și serverul cu bec funcțional; termostatul/scenariile valide sunt explicit 501 până la implementarea stories dedicate.
+React rămâne opțional. Pe commitul verificat pentru review, serverul oferă controlul becului și termostatului și execută scenarii plate în ambele variante. [Demo-ul REST](demo-sprint-1.md) și [nota de progres](progress-sprint-1.md) documentează ce a fost verificat și măsurat.
 
 ## Obiective
 
@@ -24,7 +24,7 @@ React rămâne opțional. Bootstrap-ul Spring livrează contractele și serverul
 
 ## Backlog S1
 
-Tracker: [#1](https://github.com/bsefcic/sasps-smart-home/issues/1). Membrii se atribuie ulterior; A–D sunt piste de lucru, nu persoane. Fiecare story este specificat complet, dar se începe după integrarea dependențelor. #2 este livrat prin PR-ul Spring și nu se mai repartizează ca muncă de proiectare.
+Statusurile curente sunt în [ClickUp — Smart Home SASPS](https://app.clickup.com/1500510000000520/v/l/1ampjurgbg8-332). Trackerul GitHub #1 a fost șters; tabelul păstrează numerotarea istoricului de planificare. În ClickUp, [S1-09](https://app.clickup.com/t/1500510000000520/1ampjurh9cj) este demo-ul, iar [S1-10](https://app.clickup.com/t/1500510000000520/1ampjurnxmg) este verificarea echivalenței și separării.
 
 | Issue | Task | Pistă | Ore orientative | Dependențe |
 | --- | --- | --- | --- | --- |
@@ -41,4 +41,8 @@ Tracker: [#1](https://github.com/bsefcic/sasps-smart-home/issues/1). Membrii se 
 
 După bootstrap: #3 și #10 pot începe; se pot pregăti în paralel cazuri de test din specificația fixă. #4 urmează simulatorului, #5 integrează controlul, iar #6 implementează scenele. #9 poate fi lucrat după #5; #7/#8 după #6. #11 închide sprintul. Estimările includ verificări și se ajustează la capacitatea reală a echipei.
 
-GitHub Issues sunt sursa statusului. Documentele descriu pașii, nu înlocuiesc statusurile issues. Board-ul Projects și milestone-urile nu au fost configurate prin connectorul disponibil.
+## Pornire S2
+
+- Folosim commitul de referință din [nota de progres](progress-sprint-1.md) pentru comparația cu S1. Păstrăm rezultatele brute și rerulăm aceleași fluxuri pe noul commit, în același mediu, înainte de a adăuga măsurători pentru fluxuri noi.
+- Fluxul Observer de mișcare este deja integrat prin #25. Următorul pas este alinierea contractului REST S2 cu fluxul existent înainte de extinderea inventarului, scenariilor și politicilor de temperatură.
+- Păstrăm verificările comune și guard-ul S1-10 în CI. Pilotul AI rămâne separat, pe același task pentru ambele variante și cu rezultate identificate prin SHA.

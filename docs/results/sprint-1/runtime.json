@@ -1,0 +1,302 @@
+{
+  "mode" : "runtime",
+  "provenance" : {
+    "commitSha" : "1d0f425dbd03aa312109cc20bfc5845542bf412e",
+    "commitShaSource" : "build",
+    "commitDirty" : false,
+    "timestampUtc" : "2026-11-15T12:09:54.281Z",
+    "arguments" : [ ],
+    "javaVersion" : "21.0.11",
+    "javaVendor" : "Homebrew",
+    "javaVmName" : "OpenJDK 64-Bit Server VM",
+    "osName" : "Mac OS X",
+    "osVersion" : "15.7.7",
+    "osArch" : "aarch64",
+    "availableProcessors" : 14
+  },
+  "results" : {
+    "config" : {
+      "warmupSteps" : 200000,
+      "rounds" : 10,
+      "stepsPerRound" : 1000000
+    },
+    "workloads" : {
+      "light-toggle" : {
+        "description" : "execute(SetLightPower(living-light)) alternating on/off, starting with on; final state: light off, thermostat unchanged",
+        "stepUnit" : "command",
+        "warmupOrder" : [ "baseline", "patterns" ],
+        "rounds" : [ {
+          "round" : 1,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 22.098667,
+            "patterns" : 6.826417
+          }
+        }, {
+          "round" : 2,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 7.694833,
+            "patterns" : 6.671166
+          }
+        }, {
+          "round" : 3,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 7.389417,
+            "patterns" : 7.799667
+          }
+        }, {
+          "round" : 4,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 7.55425,
+            "patterns" : 7.70225
+          }
+        }, {
+          "round" : 5,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 7.702708,
+            "patterns" : 7.691875
+          }
+        }, {
+          "round" : 6,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 7.491625,
+            "patterns" : 7.6715
+          }
+        }, {
+          "round" : 7,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 7.668,
+            "patterns" : 7.285375
+          }
+        }, {
+          "round" : 8,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 8.119916,
+            "patterns" : 7.694625
+          }
+        }, {
+          "round" : 9,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 5.608875,
+            "patterns" : 6.213375
+          }
+        }, {
+          "round" : 10,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 5.961709,
+            "patterns" : 6.123583
+          }
+        } ],
+        "engines" : {
+          "baseline" : {
+            "rawMs" : [ 22.098667, 7.694833, 7.389417, 7.55425, 7.702708, 7.491625, 7.668, 8.119916, 5.608875, 5.961709 ],
+            "medianMs" : 7.6111249999999995,
+            "minMs" : 5.608875,
+            "maxMs" : 22.098667,
+            "medianNsPerStep" : 7.6111249999999995
+          },
+          "patterns" : {
+            "rawMs" : [ 6.826417, 6.671166, 7.799667, 7.70225, 7.691875, 7.6715, 7.285375, 7.694625, 6.213375, 6.123583 ],
+            "medianMs" : 7.4784375,
+            "minMs" : 6.123583,
+            "maxMs" : 7.799667,
+            "medianNsPerStep" : 7.4784375
+          }
+        }
+      },
+      "thermostat" : {
+        "description" : "execute(SetTargetTemperature(living-thermostat)) alternating 20.5 / 21.5 °C; final state: target 21.5, light unchanged",
+        "stepUnit" : "command",
+        "warmupOrder" : [ "baseline", "patterns" ],
+        "rounds" : [ {
+          "round" : 1,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 8.43825,
+            "patterns" : 91.514125
+          }
+        }, {
+          "round" : 2,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 6.340875,
+            "patterns" : 61.52725
+          }
+        }, {
+          "round" : 3,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 5.770333,
+            "patterns" : 61.7765
+          }
+        }, {
+          "round" : 4,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 5.797166,
+            "patterns" : 61.744375
+          }
+        }, {
+          "round" : 5,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 5.747,
+            "patterns" : 63.826917
+          }
+        }, {
+          "round" : 6,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 6.113291,
+            "patterns" : 77.816375
+          }
+        }, {
+          "round" : 7,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 5.80925,
+            "patterns" : 65.246791
+          }
+        }, {
+          "round" : 8,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 5.852958,
+            "patterns" : 81.958541
+          }
+        }, {
+          "round" : 9,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 5.849334,
+            "patterns" : 64.514125
+          }
+        }, {
+          "round" : 10,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 5.743667,
+            "patterns" : 61.804
+          }
+        } ],
+        "engines" : {
+          "baseline" : {
+            "rawMs" : [ 8.43825, 6.340875, 5.770333, 5.797166, 5.747, 6.113291, 5.80925, 5.852958, 5.849334, 5.743667 ],
+            "medianMs" : 5.829292,
+            "minMs" : 5.743667,
+            "maxMs" : 8.43825,
+            "medianNsPerStep" : 5.829292
+          },
+          "patterns" : {
+            "rawMs" : [ 91.514125, 61.52725, 61.7765, 61.744375, 63.826917, 77.816375, 65.246791, 81.958541, 64.514125, 61.804 ],
+            "medianMs" : 64.17052100000001,
+            "minMs" : 61.52725,
+            "maxMs" : 91.514125,
+            "medianNsPerStep" : 64.17052100000001
+          }
+        }
+      },
+      "scene" : {
+        "description" : "executeScene alternating arrive-home (light on, 21.0 °C) / leave-home (light off, 18.0 °C); final state: light off, target 18.0",
+        "stepUnit" : "scene",
+        "warmupOrder" : [ "baseline", "patterns" ],
+        "rounds" : [ {
+          "round" : 1,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 16.065542,
+            "patterns" : 91.911375
+          }
+        }, {
+          "round" : 2,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 13.017333,
+            "patterns" : 92.536833
+          }
+        }, {
+          "round" : 3,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 12.611541,
+            "patterns" : 79.578709
+          }
+        }, {
+          "round" : 4,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 12.617208,
+            "patterns" : 78.282333
+          }
+        }, {
+          "round" : 5,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 12.595583,
+            "patterns" : 76.966167
+          }
+        }, {
+          "round" : 6,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 12.221834,
+            "patterns" : 77.138667
+          }
+        }, {
+          "round" : 7,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 12.297709,
+            "patterns" : 91.256458
+          }
+        }, {
+          "round" : 8,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 12.727041,
+            "patterns" : 90.555584
+          }
+        }, {
+          "round" : 9,
+          "order" : [ "baseline", "patterns" ],
+          "ms" : {
+            "baseline" : 12.246333,
+            "patterns" : 90.764625
+          }
+        }, {
+          "round" : 10,
+          "order" : [ "patterns", "baseline" ],
+          "ms" : {
+            "baseline" : 12.262917,
+            "patterns" : 90.174166
+          }
+        } ],
+        "engines" : {
+          "baseline" : {
+            "rawMs" : [ 16.065542, 13.017333, 12.611541, 12.617208, 12.595583, 12.221834, 12.297709, 12.727041, 12.246333, 12.262917 ],
+            "medianMs" : 12.603562,
+            "minMs" : 12.221834,
+            "maxMs" : 16.065542,
+            "medianNsPerStep" : 12.603562
+          },
+          "patterns" : {
+            "rawMs" : [ 91.911375, 92.536833, 79.578709, 78.282333, 76.966167, 77.138667, 91.256458, 90.555584, 90.764625, 90.174166 ],
+            "medianMs" : 90.364875,
+            "minMs" : 76.966167,
+            "maxMs" : 92.536833,
+            "medianNsPerStep" : 90.364875
+          }
+        }
+      }
+    }
+  }
+}

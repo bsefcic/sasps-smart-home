@@ -1,0 +1,43 @@
+{
+  "mode" : "loc",
+  "provenance" : {
+    "commitSha" : "1d0f425dbd03aa312109cc20bfc5845542bf412e",
+    "commitShaSource" : ".git",
+    "commitDirty" : null,
+    "timestampUtc" : "2026-11-15T12:09:54.190Z",
+    "arguments" : [ ],
+    "javaVersion" : "21.0.11",
+    "javaVendor" : "Homebrew",
+    "javaVmName" : "OpenJDK 64-Bit Server VM",
+    "osName" : "Mac OS X",
+    "osVersion" : "15.7.7",
+    "osArch" : "aarch64",
+    "availableProcessors" : 14
+  },
+  "results" : {
+    "definition" : "Physical lines in .java files with code outside comments; blank and comment-only lines excluded (not logical LOC).",
+    "categoryRoots" : {
+      "baseline" : [ "implementations/baseline/src/main/java" ],
+      "patterns" : [ "implementations/patterns/src/main/java" ],
+      "shared" : [ "shared/contracts/src/main/java", "shared/simulators/src/main/java" ]
+    },
+    "categories" : {
+      "baseline" : {
+        "files" : 4,
+        "codeLines" : 233
+      },
+      "patterns" : {
+        "files" : 17,
+        "codeLines" : 440
+      },
+      "shared" : {
+        "files" : 14,
+        "codeLines" : 177
+      }
+    },
+    "total" : {
+      "files" : 35,
+      "codeLines" : 850
+    }
+  }
+}
