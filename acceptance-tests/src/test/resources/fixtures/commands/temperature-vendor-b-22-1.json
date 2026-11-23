@@ -1,0 +1,5 @@
+{
+  "type": "set-target-temperature",
+  "deviceId": "bedroom-thermostat",
+  "temperature": 22.1
+}

@@ -32,15 +32,33 @@ class HomeAcceptanceTest {
         Arguments.of("patterns", (Supplier<SmartHome>) PatternsHome::new));
   }
 
+  private static LightSnapshot light(HomeSnapshot snapshot, String id) {
+    return snapshot.devices().stream()
+        .filter(LightSnapshot.class::isInstance)
+        .map(LightSnapshot.class::cast)
+        .filter(device -> device.id().equals(id))
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private static ThermostatSnapshot thermostat(HomeSnapshot snapshot, String id) {
+    return snapshot.devices().stream()
+        .filter(ThermostatSnapshot.class::isInstance)
+        .map(ThermostatSnapshot.class::cast)
+        .filter(device -> device.id().equals(id))
+        .findFirst()
+        .orElseThrow();
+  }
+
   @ParameterizedTest(name = "{0}: on/off")
   @MethodSource("implementations")
   void appliesPowerCommands(String variant, Supplier<SmartHome> factory) {
     SmartHome home = factory.get();
-    assertFalse(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
+    assertFalse(light(home.getSnapshot(), "living-light").power());
     assertEquals(CommandResult.success(), home.execute(new SetLightPower("living-light", true)));
-    assertTrue(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
+    assertTrue(light(home.getSnapshot(), "living-light").power());
     home.execute(new SetLightPower("living-light", false));
-    assertFalse(((LightSnapshot) home.getSnapshot().devices().get(0)).power());
+    assertFalse(light(home.getSnapshot(), "living-light").power());
   }
 
   @ParameterizedTest(name = "{0}: unknown device")
@@ -60,11 +78,11 @@ class HomeAcceptanceTest {
     HomeSnapshot before = home.getSnapshot();
     assertThrows(UnsupportedOperationException.class, () -> before.devices().clear());
     home.execute(new SetLightPower("living-light", true));
-    assertFalse(((LightSnapshot) before.devices().get(0)).power());
-    assertFalse(((LightSnapshot) factory.get().getSnapshot().devices().get(0)).power());
+    assertFalse(light(before, "living-light").power());
+    assertFalse(light(factory.get().getSnapshot(), "living-light").power());
   }
 
-  @ParameterizedTest(name = "{0}: initial inventory and temperature control")
+  @ParameterizedTest(name = "{0}: initial inventory and temperature control for Vendor A and B")
   @MethodSource("implementations")
   void controlsTemperatureAndPreservesSnapshots(String variant, Supplier<SmartHome> factory) {
     SmartHome home = factory.get();
@@ -72,6 +90,7 @@ class HomeAcceptanceTest {
     assertEquals(
         new HomeSnapshot(
             List.of(
+                new ThermostatSnapshot("bedroom-thermostat", 20.0),
                 new LightSnapshot("living-light", false),
                 new ThermostatSnapshot("living-thermostat", 20.0))),
         initial);
@@ -81,10 +100,32 @@ class HomeAcceptanceTest {
           home.execute(new SetTargetTemperature("living-thermostat", temperature)));
       assertEquals(
           new ThermostatSnapshot("living-thermostat", temperature),
-          home.getSnapshot().devices().get(1));
-      assertEquals(new LightSnapshot("living-light", false), home.getSnapshot().devices().get(0));
+          thermostat(home.getSnapshot(), "living-thermostat"));
+      assertEquals(
+          new ThermostatSnapshot("bedroom-thermostat", 20.0),
+          thermostat(home.getSnapshot(), "bedroom-thermostat"));
+      assertEquals(
+          new LightSnapshot("living-light", false), light(home.getSnapshot(), "living-light"));
     }
-    assertEquals(new ThermostatSnapshot("living-thermostat", 20.0), initial.devices().get(1));
+    for (double temperature : new double[] {5.0, 35.0, 22.1, 22.1}) {
+      assertEquals(
+          CommandResult.success(),
+          home.execute(new SetTargetTemperature("bedroom-thermostat", temperature)));
+      assertEquals(
+          new ThermostatSnapshot("bedroom-thermostat", temperature),
+          thermostat(home.getSnapshot(), "bedroom-thermostat"));
+      assertEquals(
+          new ThermostatSnapshot("living-thermostat", 22.1),
+          thermostat(home.getSnapshot(), "living-thermostat"));
+      assertEquals(
+          new LightSnapshot("living-light", false), light(home.getSnapshot(), "living-light"));
+    }
+    assertEquals(
+        new ThermostatSnapshot("living-thermostat", 20.0),
+        thermostat(initial, "living-thermostat"));
+    assertEquals(
+        new ThermostatSnapshot("bedroom-thermostat", 20.0),
+        thermostat(initial, "bedroom-thermostat"));
     assertEquals(initial, factory.get().getSnapshot());
   }
 
@@ -94,6 +135,7 @@ class HomeAcceptanceTest {
     SmartHome home = factory.get();
     home.execute(new SetLightPower("living-light", true));
     home.execute(new SetTargetTemperature("living-thermostat", 22.1));
+    home.execute(new SetTargetTemperature("bedroom-thermostat", 19.5));
     HomeSnapshot before = home.getSnapshot();
     assertEquals(
         CommandResult.unknownDevice("missing"),
@@ -104,15 +146,20 @@ class HomeAcceptanceTest {
     assertEquals(
         CommandResult.incompatibleDevice("living-thermostat", "set-light-power"),
         home.execute(new SetLightPower("living-thermostat", true)));
+    assertEquals(
+        CommandResult.incompatibleDevice("bedroom-thermostat", "set-light-power"),
+        home.execute(new SetLightPower("bedroom-thermostat", true)));
     assertEquals(before, home.getSnapshot());
-    for (double invalid :
-        new double[] {
-          4.9, 35.1, 22.25, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY
-        }) {
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> home.execute(new SetTargetTemperature("living-thermostat", invalid)));
-      assertEquals(before, home.getSnapshot());
+    for (String thermostatId : new String[] {"living-thermostat", "bedroom-thermostat"}) {
+      for (double invalid :
+          new double[] {
+            4.9, 35.1, 22.25, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY
+          }) {
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> home.execute(new SetTargetTemperature(thermostatId, invalid)));
+        assertEquals(before, home.getSnapshot());
+      }
     }
   }
 
@@ -128,11 +175,14 @@ class HomeAcceptanceTest {
                 List.of(
                     new SetLightPower("living-light", true),
                     new SetTargetTemperature("living-thermostat", 22.1),
+                    new SetTargetTemperature("bedroom-thermostat", 22.1),
                     new SetLightPower("living-light", false),
-                    new SetTargetTemperature("living-thermostat", 18)))));
+                    new SetTargetTemperature("living-thermostat", 18),
+                    new SetTargetTemperature("bedroom-thermostat", 17.5)))));
     assertEquals(
         new HomeSnapshot(
             List.of(
+                new ThermostatSnapshot("bedroom-thermostat", 17.5),
                 new LightSnapshot("living-light", false),
                 new ThermostatSnapshot("living-thermostat", 18))),
         home.getSnapshot());
@@ -145,7 +195,11 @@ class HomeAcceptanceTest {
       commands.add(new SetTargetTemperature("living-thermostat", i % 2 == 0 ? 5 : 35));
     assertEquals(CommandResult.success(), home.executeScene(new SceneRequest("maximum", commands)));
     assertEquals(
-        new ThermostatSnapshot("living-thermostat", 35), home.getSnapshot().devices().get(1));
+        new ThermostatSnapshot("living-thermostat", 35),
+        thermostat(home.getSnapshot(), "living-thermostat"));
+    assertEquals(
+        new ThermostatSnapshot("bedroom-thermostat", 17.5),
+        thermostat(home.getSnapshot(), "bedroom-thermostat"));
   }
 
   @ParameterizedTest(name = "{0}: scene errors never partially apply")
@@ -153,6 +207,7 @@ class HomeAcceptanceTest {
   void prevalidatesEverySceneCommand(String variant, Supplier<SmartHome> factory) {
     SmartHome home = factory.get();
     home.execute(new SetTargetTemperature("living-thermostat", 22.1));
+    home.execute(new SetTargetTemperature("bedroom-thermostat", 19.5));
     HomeSnapshot before = home.getSnapshot();
     Map<HomeCommand, CommandResult> invalid =
         Map.of(
@@ -162,6 +217,8 @@ class HomeAcceptanceTest {
             CommandResult.unknownDevice("missing"),
             new SetLightPower("living-thermostat", true),
             CommandResult.incompatibleDevice("living-thermostat", "set-light-power"),
+            new SetLightPower("bedroom-thermostat", true),
+            CommandResult.incompatibleDevice("bedroom-thermostat", "set-light-power"),
             new SetTargetTemperature("living-light", 18),
             CommandResult.incompatibleDevice("living-light", "set-target-temperature"));
     for (var entry : invalid.entrySet()) {

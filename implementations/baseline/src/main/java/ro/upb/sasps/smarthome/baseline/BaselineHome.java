@@ -17,12 +17,15 @@ import ro.upb.sasps.smarthome.contracts.SmartHome;
 import ro.upb.sasps.smarthome.contracts.ThermostatSnapshot;
 import ro.upb.sasps.smarthome.simulators.VendorALight;
 import ro.upb.sasps.smarthome.simulators.VendorAThermostat;
+import ro.upb.sasps.smarthome.simulators.VendorBThermostat;
 
 /** Direct centralized control; correctness is not intentionally weakened. */
 public final class BaselineHome implements SmartHome {
   private final Map<String, VendorALight> lights = new LinkedHashMap<>();
 
-  private final Map<String, VendorAThermostat> thermostats = new LinkedHashMap<>();
+  private final Map<String, VendorAThermostat> vendorAThermostats = new LinkedHashMap<>();
+
+  private final Map<String, VendorBThermostat> vendorBThermostats = new LinkedHashMap<>();
 
   private final Map<String, String> motionSensorLights = new LinkedHashMap<>();
 
@@ -30,7 +33,8 @@ public final class BaselineHome implements SmartHome {
 
   public BaselineHome() {
     lights.put("living-light", new VendorALight("living-light"));
-    thermostats.put("living-thermostat", new VendorAThermostat("living-thermostat"));
+    vendorAThermostats.put("living-thermostat", new VendorAThermostat("living-thermostat"));
+    vendorBThermostats.put("bedroom-thermostat", new VendorBThermostat("bedroom-thermostat"));
     motionSensorLights.put("living-motion", "living-light");
     motionReadings.put("living-motion", false);
   }
@@ -80,9 +84,14 @@ public final class BaselineHome implements SmartHome {
           .setPower(request.power() ? VendorALight.Power.ENABLED : VendorALight.Power.DISABLED);
     } else {
       SetTargetTemperature request = (SetTargetTemperature) command;
-      thermostats
-          .get(request.deviceId())
-          .setTargetDeciCelsius((int) Math.round(request.temperature() * 10));
+      VendorAThermostat vendorA = vendorAThermostats.get(request.deviceId());
+      if (vendorA != null) {
+        vendorA.setTargetDeciCelsius((int) Math.round(request.temperature() * 10));
+      } else {
+        vendorBThermostats
+            .get(request.deviceId())
+            .applyTargetFahrenheit(request.temperature() * 9.0 / 5.0 + 32.0);
+      }
     }
   }
 
@@ -91,17 +100,21 @@ public final class BaselineHome implements SmartHome {
       if (lights.containsKey(request.deviceId())) {
         return CommandResult.success();
       }
-      return thermostats.containsKey(request.deviceId())
+      return hasThermostat(request.deviceId())
           ? CommandResult.incompatibleDevice(request.deviceId(), "set-light-power")
           : CommandResult.unknownDevice(request.deviceId());
     }
     SetTargetTemperature request = (SetTargetTemperature) command;
-    if (thermostats.containsKey(request.deviceId())) {
+    if (hasThermostat(request.deviceId())) {
       return CommandResult.success();
     }
     return lights.containsKey(request.deviceId())
         ? CommandResult.incompatibleDevice(request.deviceId(), "set-target-temperature")
         : CommandResult.unknownDevice(request.deviceId());
+  }
+
+  private boolean hasThermostat(String deviceId) {
+    return vendorAThermostats.containsKey(deviceId) || vendorBThermostats.containsKey(deviceId);
   }
 
   @Override
@@ -114,13 +127,21 @@ public final class BaselineHome implements SmartHome {
                 devices.add(
                     new LightSnapshot(
                         light.id(), light.readPower() == VendorALight.Power.ENABLED)));
-    thermostats
+    vendorAThermostats
         .values()
         .forEach(
             thermostat ->
                 devices.add(
                     new ThermostatSnapshot(
                         thermostat.id(), thermostat.readTargetDeciCelsius() / 10.0)));
+    vendorBThermostats
+        .values()
+        .forEach(
+            thermostat -> {
+              double celsius = (thermostat.getTargetFahrenheit() - 32.0) * 5.0 / 9.0;
+              devices.add(
+                  new ThermostatSnapshot(thermostat.serialId(), Math.round(celsius * 10.0) / 10.0));
+            });
     devices.sort(Comparator.comparing(DeviceSnapshot::id));
     return new HomeSnapshot(devices);
   }

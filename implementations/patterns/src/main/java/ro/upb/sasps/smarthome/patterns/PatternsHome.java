@@ -17,6 +17,7 @@ import ro.upb.sasps.smarthome.contracts.SmartHome;
 import ro.upb.sasps.smarthome.contracts.ThermostatSnapshot;
 import ro.upb.sasps.smarthome.simulators.VendorALight;
 import ro.upb.sasps.smarthome.simulators.VendorAThermostat;
+import ro.upb.sasps.smarthome.simulators.VendorBThermostat;
 
 public final class PatternsHome implements SmartHome {
   private final Map<String, Light> lights = new LinkedHashMap<>();
@@ -31,6 +32,9 @@ public final class PatternsHome implements SmartHome {
     thermostats.put(
         "living-thermostat",
         new VendorAThermostatAdapter(new VendorAThermostat("living-thermostat")));
+    thermostats.put(
+        "bedroom-thermostat",
+        new VendorBThermostatAdapter(new VendorBThermostat("bedroom-thermostat")));
     MotionSensor sensor = new MotionSensor("living-motion");
     sensor.subscribe(new MotionLightAutomation(light));
     motionSensors.put(sensor.id(), sensor);

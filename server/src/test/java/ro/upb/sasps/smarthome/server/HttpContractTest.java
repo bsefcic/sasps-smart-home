@@ -37,6 +37,7 @@ abstract class HttpContractTest {
   void resetDevices() throws Exception {
     assertEquals(200, post("/commands", light(false)).statusCode());
     assertEquals(200, post("/commands", temperature("living-thermostat", 20)).statusCode());
+    assertEquals(200, post("/commands", temperature("bedroom-thermostat", 20)).statusCode());
     assertEquals(200, post("/sensors/motion", motion("living-motion", false)).statusCode());
   }
 
@@ -46,11 +47,11 @@ abstract class HttpContractTest {
 
     assertEquals(200, response.statusCode(), response.body());
     assertTrue(json(response).get("ok").booleanValue());
-    assertTrue(json(get("/home")).get("devices").get(0).get("power").booleanValue());
+    assertTrue(device(json(get("/home")), "living-light").get("power").booleanValue());
 
     post("/commands", light(false));
     assertEquals(200, post("/sensors/motion", motion("living-motion", true)).statusCode());
-    assertFalse(json(get("/home")).get("devices").get(0).get("power").booleanValue());
+    assertFalse(device(json(get("/home")), "living-light").get("power").booleanValue());
   }
 
   @Test
@@ -88,11 +89,12 @@ abstract class HttpContractTest {
 
   @ParameterizedTest
   @CsvSource({
-    "commands/light-on.json, /commands, false, 1, true, 20.0",
-    "commands/light-off.json, /commands, true, 1, false, 20.0",
-    "commands/temperature-22.json, /commands, true, 1, true, 22.0",
-    "scenes/leave-home.json, /scenes/execute, true, 2, false, 18.0",
-    "scenes/evening.json, /scenes/execute, false, 3, true, 23.0"
+    "commands/light-on.json, /commands, false, 1, true, 20.0, 20.0",
+    "commands/light-off.json, /commands, true, 1, false, 20.0, 20.0",
+    "commands/temperature-22.json, /commands, true, 1, true, 22.0, 20.0",
+    "commands/temperature-vendor-b-22-1.json, /commands, true, 1, true, 20.0, 22.1",
+    "scenes/leave-home.json, /scenes/execute, true, 2, false, 18.0, 20.0",
+    "scenes/evening.json, /scenes/execute, false, 3, true, 23.0, 20.0"
   })
   void executesReferenceFixtures(
       String file,
@@ -100,7 +102,8 @@ abstract class HttpContractTest {
       boolean initialPower,
       int count,
       boolean power,
-      double targetTemperature)
+      double livingTemperature,
+      double bedroomTemperature)
       throws Exception {
     if (initialPower) {
       assertEquals(200, post("/commands", fixture("commands/light-on.json")).statusCode());
@@ -108,9 +111,11 @@ abstract class HttpContractTest {
     HttpResponse<String> response = post(path, fixture(file));
     assertEquals(200, response.statusCode(), response.body());
     JsonNode expected = mapper.readTree(fixture("responses/s1-initial-home.json"));
-    var devices = expected.get("devices");
-    ((ObjectNode) devices.get(0)).put("power", power);
-    ((ObjectNode) devices.get(1)).put("targetTemperature", targetTemperature);
+    ((ObjectNode) device(expected, "bedroom-thermostat"))
+        .put("targetTemperature", bedroomTemperature);
+    ((ObjectNode) device(expected, "living-light")).put("power", power);
+    ((ObjectNode) device(expected, "living-thermostat"))
+        .put("targetTemperature", livingTemperature);
     assertEquals(
         mapper
             .createObjectNode()
@@ -183,15 +188,19 @@ abstract class HttpContractTest {
   @ValueSource(strings = {"100", "4.9", "35.1", "22.25", "1e309", "-1e309"})
   void invalidTemperatureIs422(String temperature) throws Exception {
     String before = get("/home").body();
-    assertError(
-        post(
-            "/commands",
-            "{\"type\":\"set-target-temperature\",\"deviceId\":\"living-thermostat\",\"temperature\":"
-                + temperature
-                + "}"),
-        422,
-        "INVALID_TEMPERATURE");
-    assertEquals(before, get("/home").body());
+    for (String thermostatId : List.of("living-thermostat", "bedroom-thermostat")) {
+      assertError(
+          post(
+              "/commands",
+              "{\"type\":\"set-target-temperature\",\"deviceId\":\""
+                  + thermostatId
+                  + "\",\"temperature\":"
+                  + temperature
+                  + "}"),
+          422,
+          "INVALID_TEMPERATURE");
+      assertEquals(before, get("/home").body());
+    }
   }
 
   @ParameterizedTest
@@ -209,23 +218,30 @@ abstract class HttpContractTest {
   }
 
   @ParameterizedTest
-  @ValueSource(doubles = {5.0, 35.0, 22.1})
-  void temperaturePersistsAcrossRequests(double value) throws Exception {
+  @CsvSource({
+    "living-thermostat, bedroom-thermostat, 5.0",
+    "living-thermostat, bedroom-thermostat, 35.0",
+    "living-thermostat, bedroom-thermostat, 22.1",
+    "bedroom-thermostat, living-thermostat, 5.0",
+    "bedroom-thermostat, living-thermostat, 35.0",
+    "bedroom-thermostat, living-thermostat, 22.1"
+  })
+  void temperaturePersistsAcrossRequestsAndIsolatesThermostats(
+      String targetId, String otherId, double value) throws Exception {
     for (int repeat = 0; repeat < 2; repeat++) {
-      HttpResponse<String> response = post("/commands", temperature("living-thermostat", value));
+      HttpResponse<String> response = post("/commands", temperature(targetId, value));
       assertEquals(200, response.statusCode());
       assertTrue(json(response).get("ok").booleanValue());
       assertEquals(1, json(response).get("executedCommands").intValue());
       assertEquals(
           value,
-          json(response)
-              .get("snapshot")
-              .get("devices")
-              .get(1)
-              .get("targetTemperature")
-              .doubleValue());
+          device(json(response).get("snapshot"), targetId).get("targetTemperature").doubleValue());
       assertEquals(
-          value, json(get("/home")).get("devices").get(1).get("targetTemperature").doubleValue());
+          20.0,
+          device(json(response).get("snapshot"), otherId).get("targetTemperature").doubleValue());
+      JsonNode home = json(get("/home"));
+      assertEquals(value, device(home, targetId).get("targetTemperature").doubleValue());
+      assertEquals(20.0, device(home, otherId).get("targetTemperature").doubleValue());
     }
   }
 
@@ -233,6 +249,7 @@ abstract class HttpContractTest {
   void inventoryErrorsDoNotMutateState() throws Exception {
     post("/commands", light(true));
     post("/commands", temperature("living-thermostat", 22.1));
+    post("/commands", temperature("bedroom-thermostat", 19.5));
     String before = get("/home").body();
     assertError(post("/commands", temperature("missing", 22)), 404, "UNKNOWN_DEVICE");
     assertEquals(before, get("/home").body());
@@ -240,6 +257,11 @@ abstract class HttpContractTest {
     assertEquals(before, get("/home").body());
     assertError(
         post("/commands", light(true).replace("living-light", "living-thermostat")),
+        422,
+        "INCOMPATIBLE_DEVICE");
+    assertEquals(before, get("/home").body());
+    assertError(
+        post("/commands", light(true).replace("living-light", "bedroom-thermostat")),
         422,
         "INCOMPATIBLE_DEVICE");
     assertEquals(before, get("/home").body());
@@ -262,13 +284,15 @@ abstract class HttpContractTest {
     assertTrue(json(response).get("ok").booleanValue());
     assertEquals(4, json(response).get("executedCommands").intValue());
     assertEquals(json(get("/home")), json(response).get("snapshot"));
-    assertFalse(json(response).get("snapshot").get("devices").get(0).get("power").booleanValue());
+    assertFalse(device(json(response).get("snapshot"), "living-light").get("power").booleanValue());
     assertEquals(
         18,
-        json(response)
-            .get("snapshot")
-            .get("devices")
-            .get(1)
+        device(json(response).get("snapshot"), "living-thermostat")
+            .get("targetTemperature")
+            .doubleValue());
+    assertEquals(
+        20.0,
+        device(json(response).get("snapshot"), "bedroom-thermostat")
             .get("targetTemperature")
             .doubleValue());
   }
@@ -344,10 +368,7 @@ abstract class HttpContractTest {
                               assertEquals(200, response.statusCode());
                               assertEquals(
                                   power,
-                                  json(response)
-                                      .get("snapshot")
-                                      .get("devices")
-                                      .get(0)
+                                  device(json(response).get("snapshot"), "living-light")
                                       .get("power")
                                       .booleanValue());
                             } catch (Exception exception) {
@@ -371,6 +392,15 @@ abstract class HttpContractTest {
     assertEquals(
         "http://localhost:5173",
         response.headers().firstValue("Access-Control-Allow-Origin").orElseThrow());
+  }
+
+  private static JsonNode device(JsonNode snapshot, String id) {
+    for (JsonNode device : snapshot.get("devices")) {
+      if (id.equals(device.get("id").textValue())) {
+        return device;
+      }
+    }
+    throw new AssertionError("Device not found in snapshot: " + id);
   }
 
   private static String fixture(String file) throws IOException {

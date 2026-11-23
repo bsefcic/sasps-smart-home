@@ -14,11 +14,20 @@ Content-Type: application/json
 
 < ../../acceptance-tests/src/test/resources/fixtures/commands/light-on.json
 
-### Temperatură la 22°C — 200
+### Temperatură la 22°C (Vendor A) — 200
 POST {{baseUrl}}/api/v1/commands
 Content-Type: application/json
 
 < ../../acceptance-tests/src/test/resources/fixtures/commands/temperature-22.json
+
+### Temperatură la 22.1°C (Vendor B, bedroom-thermostat) — 200
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+< ../../acceptance-tests/src/test/resources/fixtures/commands/temperature-vendor-b-22-1.json
+
+### Verificare stare după comanda Vendor B — 200
+GET {{baseUrl}}/api/v1/home
 
 ### Scenariu leave-home — 200
 POST {{baseUrl}}/api/v1/scenes/execute

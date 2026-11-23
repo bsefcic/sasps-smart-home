@@ -6,6 +6,7 @@ Aceste fișiere sunt date reutilizabile; regulile complete sunt în docs/contrac
 | --- | --- |
 | commands/light-on.json, light-off.json | 200, executedCommands=1, starea cerută |
 | commands/temperature-22.json | 200, targetTemperature=22 |
+| commands/temperature-vendor-b-22-1.json | 200, bedroom-thermostat targetTemperature=22.1 |
 | scenes/leave-home.json | 200, executedCommands=2, bec oprit și temperatură 18 |
 | scenes/invalid-middle.json | 422 INVALID_TEMPERATURE, commandIndex=1, fără efecte |
 | errors/unknown-device.json | 404 UNKNOWN_DEVICE, fără efecte |

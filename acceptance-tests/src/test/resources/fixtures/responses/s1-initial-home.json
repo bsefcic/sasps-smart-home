@@ -1,6 +1,11 @@
 {
   "devices": [
     {
+      "id": "bedroom-thermostat",
+      "kind": "thermostat",
+      "targetTemperature": 20.0
+    },
+    {
       "id": "living-light",
       "kind": "light",
       "power": false
