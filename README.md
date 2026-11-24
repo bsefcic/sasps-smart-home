@@ -53,7 +53,8 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/commands -Conte
 ## Ce funcționează acum
 
 - Server Spring Boot 3.5.16, validare strictă a JSON-ului, erori uniforme, selectarea engine-ului și CORS configurat pentru un React local viitor.
-- Health, citirea stării, control on/off pentru living-light și temperatură pentru living-thermostat în ambele engines.
+- Health, citirea stării, control on/off pentru `living-light` și temperatură pentru termostatele `living-thermostat` (Vendor A) și `bedroom-thermostat` (Vendor B) în ambele variante.
+- Citirile pentru `living-motion` pot aprinde becul din living la trecerea de la lipsa mișcării la mișcare.
 - Command și Adapter în patterns; API direct în baseline.
 - Contracte Java și exemple complete pentru termostat și scenarii, cu teste de validare.
 - Simulator VendorAThermostat în Java simplu și adaptorul patterns către interfața Thermostat în Celsius; conectate la engines prin control direct în baseline și Command/Adapter în patterns. Simulatorul pornește la 200 deci-grade Celsius, acceptă 50–350 și păstrează stare independentă per instanță.
@@ -97,7 +98,8 @@ Pe Windows înlocuiește ./mvnw cu `.\mvnw.cmd`. CI verifică și pornirea JAR-u
 
 ## Documentație
 
-- [Contract v1: API, erori, inventar, scenarii, Vendor A](docs/contracts-v1.md)
+- [Contract v1 pentru API-ul disponibil](docs/contracts-v1.md)
+- [Contractul REST pentru Sprintul 2](docs/contracts-sprint-2.md)
 - [Taskuri S1 cu pași și rezultate așteptate](docs/tasks-sprint-1.md)
 - [Scope](docs/scope.md) și [plan/calendar](docs/plan.md)
 - [Arhitectură](docs/architecture.md), [lucru cu AI](docs/ai-workflow.md), [evaluare](docs/evaluation.md)

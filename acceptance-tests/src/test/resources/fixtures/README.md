@@ -19,4 +19,4 @@ Aceste fișiere sunt date reutilizabile; regulile complete sunt în docs/contrac
 | scenes/incompatible-device-after-valid.json | 422 INCOMPATIBLE_DEVICE, commandIndex=1, fără efecte |
 | scenes/missing-power-after-valid.json | 400 INVALID_REQUEST, commandIndex=1, fără efecte |
 
-`responses/s1-initial-home.json` descrie inventarul inițial S1. Suita HTTP folosește aceste fișiere pentru ambele engines, iar exemplele REST trimit aceleași cereri JSON.
+`responses/s1-initial-home.json` conține inventarul inițial curent, inclusiv Vendor B. Suita HTTP folosește aceste fișiere pentru ambele variante, iar exemplele REST trimit aceleași cereri JSON.

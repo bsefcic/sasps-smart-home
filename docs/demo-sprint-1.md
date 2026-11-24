@@ -36,6 +36,8 @@ Rulează `python3 docs/http/replay-sprint-1.py` (pe Windows, `py -3 docs/http/re
 | Dispozitiv incompatibil în scenariu (`incompatible-device-after-valid`) | `POST /scenes/execute` | 422 `INCOMPATIBLE_DEVICE`, `commandIndex=1` |
 | Inventar final | `GET /home` | 200, becul rămâne oprit, termostatul rămâne la 18°C |
 
+Pe versiunea cu Vendor B, scriptul verifică și prezența `bedroom-thermostat` la 20°C pe tot parcursul demo-ului. Captura din Sprintul 1 folosește inventarul de la revizia indicată mai sus.
+
 În scena incompatibilă, prima comandă ar aprinde becul, dar a doua încearcă să-i seteze temperatura. Cererea trece validarea HTTP; implementarea respinge întreaga scenă la verificarea compatibilității. Inventarul final confirmă că nu s-a executat nici prima comandă.
 
 Pentru o repetiție mai amplă, adaugă `--extended` la comanda de replay. Modul include health, controlul separat al becului și termostatului, plus `unknown-device` (404 fără index), `invalid-middle` (422, index 1) și `unknown-device-after-valid` (404, index 2). După fiecare respingere, scriptul recitește inventarul.

@@ -1,6 +1,6 @@
-# Contract v1 — decis pentru Sprint 1
+# Contract REST v1 — funcționalități disponibile
 
-Acesta este contractul comun baseline/patterns. Deciziile de mai jos sunt stabilite; taskurile rămase le implementează. Nu schimbați numele câmpurilor sau comportamentul fără o modificare explicită a contractului.
+Acesta este contractul comun baseline/patterns. Include cererile Sprintului 1 și extensiile disponibile pentru Vendor B și mișcare. [Contractul pentru Sprintul 2](contracts-sprint-2.md) precizează și comportamentul care va fi implementat în S2-03 și S2-05.
 
 ## Cum pornim serverele
 
@@ -21,8 +21,9 @@ Primul server folosește patterns pe 127.0.0.1:8080; al doilea baseline pe 127.0
 | GET /api/v1/home | fără body | 200, HomeSnapshot |
 | POST /api/v1/commands | Command | 200, ExecutionResponse |
 | POST /api/v1/scenes/execute | SceneRequest | 200, ExecutionResponse |
+| POST /api/v1/sensors/motion | MotionReading | 200, ExecutionResponse |
 
-POST folosește Content-Type: application/json. OpenAPI este versionat în `server/src/main/resources/static/openapi.yaml` și servit la `/openapi.yaml`. Fișierul descrie controlul manual și scenariile plate implementate.
+POST folosește Content-Type: application/json. OpenAPI este versionat în `server/src/main/resources/static/openapi.yaml` și servit la `/openapi.yaml`.
 
 ### Comenzi — exact aceste câmpuri
 
@@ -57,22 +58,48 @@ O listă invalidă nu schimbă nimic. S1 nu simulează defecte ale hardware-ului
 ### ExecutionResponse
 
 ```json
-{"ok":true,"executedCommands":1,"snapshot":{"devices":[{"id":"living-light","kind":"light","power":true}]}}
+{
+  "ok": true,
+  "executedCommands": 1,
+  "snapshot": {
+    "devices": [
+      {"id":"bedroom-thermostat","kind":"thermostat","targetTemperature":20.0},
+      {"id":"living-light","kind":"light","power":true},
+      {"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}
+    ]
+  }
+}
 ```
 
-Exemplul de mai sus ilustrează doar becul; snapshot-ul curent include și termostatul. executedCommands este 1 la comandă sau lungimea listei la scenariu. snapshot este starea de după execuție, capturată în aceeași secțiune sincronizată. Câmpurile suplimentare de variantă/timestamp nu se adaugă: ambele servere oferă același format.
+`executedCommands` este 1 la o comandă sau la o citire de mișcare acceptată și este lungimea listei la un scenariu plat. `snapshot` este starea de după operație, capturată în aceeași secțiune sincronizată. Ambele servere oferă același format.
 
-### Inventarul-țintă S1 și HomeSnapshot
+### Inventarul inițial și HomeSnapshot
 
-După #3–#5, ambele engines pornesc cu exact două dispozitive, ordonate crescător după ID:
+Ambele variante pornesc cu dispozitivele de mai jos, ordonate crescător după `id`.
 
 ```json
-{"devices":[{"id":"living-light","kind":"light","power":false},{"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}]}
+{
+  "devices": [
+    {"id":"bedroom-thermostat","kind":"thermostat","targetTemperature":20.0},
+    {"id":"living-light","kind":"light","power":false},
+    {"id":"living-thermostat","kind":"thermostat","targetTemperature":20.0}
+  ]
+}
 ```
 
-Un bec nu are targetTemperature; termostatul nu are power. Snapshot-urile sunt records imuabile cu o listă copiată defensiv. Setările identice repetate sunt permise, fără efecte suplimentare. Nu avem persistență, înregistrare dinamică sau multi-user.
+`living-thermostat` este Vendor A, iar `bedroom-thermostat` este Vendor B. Trimite aceeași comandă `set-target-temperature` cu ID-ul dorit în `deviceId`. Ambele termostate primesc `temperature` și expun `targetTemperature` în Celsius. API-ul nativ al Vendor B stochează valoarea în Fahrenheit (41–95°F, inițial 68°F). Clienții găsesc dispozitivele după `id`, deoarece adăugarea unui dispozitiv modifică pozițiile în lista sortată.
 
-**Stadiul curent (S1-04 și S1-05):** controlul manual și scenariile plate sunt implementate în ambele engines. Întreaga listă este validată înainte de execuție; prima eroare de inventar sau compatibilitate include commandIndex, fără modificarea stării.
+Un bec expune `power`, iar un termostat expune `targetTemperature`. Snapshot-urile sunt records imuabile cu o listă copiată defensiv. Setările identice repetate sunt permise, fără efecte suplimentare.
+
+### Citire de mișcare
+
+```json
+{"sensorId":"living-motion","motion":true}
+```
+
+Sunt acceptate exact `sensorId` (aceeași sintaxă ca `deviceId`) și `motion` (boolean JSON). Senzorul `living-motion` pornește cu `false`. Trecerea de la `false` la `true` aprinde `living-light`. Un `true` repetat lasă becul în starea curentă. O citire `false` permite o nouă declanșare și lasă becul în starea curentă. Senzorul este adresabil prin endpointul de citire, separat de lista `devices`.
+
+O citire acceptată returnează 200 cu `executedCommands: 1`, inclusiv când becul rămâne în aceeași stare. Un ID de senzor necunoscut întoarce 404 `UNKNOWN_DEVICE`, iar un payload invalid întoarce 400 `INVALID_REQUEST`. Erorile păstrează starea și ultima citire.
 
 ## Erori
 
