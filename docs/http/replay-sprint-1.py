@@ -18,12 +18,11 @@ def require(actual, expected, label):
 
 
 def snapshot(power, temperature):
-    return {
-        "devices": [
-            {"id": "living-light", "kind": "light", "power": power},
-            {"id": "living-thermostat", "kind": "thermostat", "targetTemperature": temperature},
-        ]
-    }
+    initial = json.loads((FIXTURES / "responses/s1-initial-home.json").read_bytes())
+    devices = {device["id"]: device for device in initial["devices"]}
+    devices["living-light"]["power"] = power
+    devices["living-thermostat"]["targetTemperature"] = temperature
+    return initial
 
 
 def replay(port, extended):

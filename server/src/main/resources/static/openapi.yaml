@@ -1,9 +1,10 @@
 openapi: 3.0.3
 info:
   title: SASPS Smart Home API
-  version: 1.0.0
+  version: 1.1.0
   description: >-
-    Contract v1. Implements light and thermostat control, status, and flat scenes.
+    Contract v1. Implements light control, Vendor A and B thermostat control,
+    motion readings, home snapshots, and flat scenes.
     Baseline and patterns expose the same HTTP contract. Scene commands are
     validated before execution. A rejected command inside a scene reports a
     zero-based commandIndex, and rejected requests leave device state unchanged.
@@ -36,6 +37,11 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/HomeSnapshot'}
+              example:
+                devices:
+                  - {id: bedroom-thermostat, kind: thermostat, targetTemperature: 20.0}
+                  - {id: living-light, kind: light, power: false}
+                  - {id: living-thermostat, kind: thermostat, targetTemperature: 20.0}
   /api/v1/commands:
     post:
       operationId: executeCommand
@@ -44,6 +50,13 @@ paths:
         content:
           application/json:
             schema: {$ref: '#/components/schemas/Command'}
+            examples:
+              light:
+                value: {type: set-light-power, deviceId: living-light, power: true}
+              vendorA:
+                value: {type: set-target-temperature, deviceId: living-thermostat, temperature: 22.1}
+              vendorB:
+                value: {type: set-target-temperature, deviceId: bedroom-thermostat, temperature: 22.1}
       responses:
         '200': {$ref: '#/components/responses/Execution'}
         '400': {$ref: '#/components/responses/Error'}
@@ -55,15 +68,21 @@ paths:
     post:
       operationId: reportMotion
       description: >-
-        Simulated motion sensor reading. When motion starts (false to true), the light
-        of the sensor's room turns on; repeated identical readings do not trigger it again.
+        The living-motion sensor starts at false. A false-to-true transition turns
+        on living-light. A false reading or a repeated true leaves the light
+        unchanged. A false reading allows the next true to trigger the rule again.
       requestBody:
         required: true
         content:
           application/json:
             schema: {$ref: '#/components/schemas/MotionReading'}
+            example: {sensorId: living-motion, motion: true}
       responses:
-        '200': {$ref: '#/components/responses/Execution'}
+        '200':
+          description: Reading accepted. executedCommands is 1 even when no light command runs.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ExecutionResponse'}
         '400': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '415': {$ref: '#/components/responses/Error'}
@@ -102,6 +121,7 @@ components:
       example: living-light
     Temperature:
       type: number
+      description: Degrees Celsius
       minimum: 5
       maximum: 35
       multipleOf: 0.1
@@ -161,7 +181,7 @@ components:
       properties:
         devices:
           type: array
-          description: Sorted by id; contains bedroom-thermostat, living-light, and living-thermostat
+          description: Sorted by id. Contains bedroom-thermostat (Vendor B), living-light, and living-thermostat (Vendor A).
           items:
             oneOf:
               - {$ref: '#/components/schemas/LightSnapshot'}

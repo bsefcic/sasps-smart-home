@@ -1,0 +1,170 @@
+# Cazuri de acceptare pentru S2-03 și S2-05.
+# Rulează-le după implementarea funcției respective, pe aceleași date în ambele variante.
+# Pornește cu sesiuni curate pentru secvența Confort/Eco.
+# Schimbă baseUrl la http://127.0.0.1:8081 pentru baseline.
+@baseUrl = http://127.0.0.1:8080
+
+### Scenariu cu trei niveluri și reutilizare — 200, 3 comenzi, bedroom-thermostat la 22.1
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "evening",
+  "commands": [
+    {"type":"scene-ref","sceneId":"warm"},
+    {"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":18},
+    {"type":"scene-ref","sceneId":"warm"}
+  ],
+  "scenes": {
+    "warm": {"commands":[{"type":"scene-ref","sceneId":"bedroom"}]},
+    "bedroom": {"commands":[{"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":22.1}]}
+  }
+}
+
+### Referință lipsă — 400 UNKNOWN_SCENE, commandPath=[1], stare neschimbată
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "missing",
+  "commands": [
+    {"type":"set-light-power","deviceId":"living-light","power":true},
+    {"type":"scene-ref","sceneId":"unknown"}
+  ],
+  "scenes": {}
+}
+
+### Ciclu direct — 400 SCENE_CYCLE, commandPath=[1,0], stare neschimbată
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "direct-cycle",
+  "commands": [
+    {"type":"set-light-power","deviceId":"living-light","power":true},
+    {"type":"scene-ref","sceneId":"loop"}
+  ],
+  "scenes": {
+    "loop": {"commands":[{"type":"scene-ref","sceneId":"loop"}]}
+  }
+}
+
+### Ciclu indirect — 400 SCENE_CYCLE, commandPath=[0,0,0], stare neschimbată
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "indirect-cycle",
+  "commands": [{"type":"scene-ref","sceneId":"first"}],
+  "scenes": {
+    "first": {"commands":[{"type":"scene-ref","sceneId":"second"}]},
+    "second": {"commands":[{"type":"scene-ref","sceneId":"first"}]}
+  }
+}
+
+### Adâncime 6 — 400 SCENE_LIMIT_EXCEEDED, commandPath=[0,0,0,0,0]
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "depth-six",
+  "commands": [{"type":"scene-ref","sceneId":"a"}],
+  "scenes": {
+    "a": {"commands":[{"type":"scene-ref","sceneId":"b"}]},
+    "b": {"commands":[{"type":"scene-ref","sceneId":"c"}]},
+    "c": {"commands":[{"type":"scene-ref","sceneId":"d"}]},
+    "d": {"commands":[{"type":"scene-ref","sceneId":"e"}]},
+    "e": {"commands":[{"type":"set-light-power","deviceId":"living-light","power":true}]}
+  }
+}
+
+### 54 de comenzi expandate — 400 SCENE_LIMIT_EXCEEDED, commandPath=[2,2,1,0]
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "too-many",
+  "commands": [
+    {"type":"scene-ref","sceneId":"a"},
+    {"type":"scene-ref","sceneId":"a"},
+    {"type":"scene-ref","sceneId":"a"}
+  ],
+  "scenes": {
+    "a": {"commands":[{"type":"scene-ref","sceneId":"b"},{"type":"scene-ref","sceneId":"b"},{"type":"scene-ref","sceneId":"b"}]},
+    "b": {"commands":[{"type":"scene-ref","sceneId":"c"},{"type":"scene-ref","sceneId":"c"},{"type":"scene-ref","sceneId":"c"}]},
+    "c": {"commands":[
+      {"type":"set-light-power","deviceId":"living-light","power":true},
+      {"type":"set-light-power","deviceId":"living-light","power":false}
+    ]}
+  }
+}
+
+### Temperatură invalidă într-o subscenă — 422 INVALID_TEMPERATURE, commandPath=[1,0,0]
+POST {{baseUrl}}/api/v1/scenes/execute
+Content-Type: application/json
+
+{
+  "name": "invalid-leaf",
+  "commands": [
+    {"type":"set-light-power","deviceId":"living-light","power":true},
+    {"type":"scene-ref","sceneId":"warm"}
+  ],
+  "scenes": {
+    "warm": {"commands":[{"type":"scene-ref","sceneId":"bedroom"}]},
+    "bedroom": {"commands":[{"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":22.25}]}
+  }
+}
+
+### Confort implicit — 200, o comandă, living-thermostat la 22.0
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":16.0}
+
+### Prag Confort — 200, zero comenzi, ținta rămâne 22.0
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":21.0}
+
+### Selectează Eco — 200, {"ok":true,"mode":"eco"}
+POST {{baseUrl}}/api/v1/automation/temperature-mode
+Content-Type: application/json
+
+{"mode":"eco"}
+
+### Aceeași citire, în Eco — 200, o comandă, living-thermostat la 18.0
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":16.0}
+
+### Prag Eco — 200, zero comenzi, ținta rămâne 18.0
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":17.0}
+
+### Tip de temperatură invalid — 400 INVALID_REQUEST
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":"16.0"}
+
+### Precizie invalidă — 422 INVALID_TEMPERATURE
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"living-temperature","temperature":16.25}
+
+### Senzor necunoscut — 404 UNKNOWN_DEVICE
+POST {{baseUrl}}/api/v1/sensors/temperature
+Content-Type: application/json
+
+{"sensorId":"missing","temperature":16.0}
+
+### Mod necunoscut — 400 INVALID_REQUEST, modul activ rămâne Eco
+POST {{baseUrl}}/api/v1/automation/temperature-mode
+Content-Type: application/json
+
+{"mode":"invalid"}

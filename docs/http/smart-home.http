@@ -29,6 +29,12 @@ Content-Type: application/json
 ### Verificare stare după comanda Vendor B — 200
 GET {{baseUrl}}/api/v1/home
 
+### Temperatură cu precizie invalidă pentru Vendor B — 422 INVALID_TEMPERATURE
+POST {{baseUrl}}/api/v1/commands
+Content-Type: application/json
+
+{"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":22.25}
+
 ### Scenariu leave-home — 200
 POST {{baseUrl}}/api/v1/scenes/execute
 Content-Type: application/json
@@ -124,3 +130,9 @@ POST {{baseUrl}}/api/v1/sensors/motion
 Content-Type: application/json
 
 {"sensorId":"missing","motion":true}
+
+### Citire de mișcare invalidă — 400 INVALID_REQUEST
+POST {{baseUrl}}/api/v1/sensors/motion
+Content-Type: application/json
+
+{"sensorId":"living-motion","motion":"true"}

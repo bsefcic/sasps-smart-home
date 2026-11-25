@@ -47,10 +47,14 @@ abstract class HttpContractTest {
 
     assertEquals(200, response.statusCode(), response.body());
     assertTrue(json(response).get("ok").booleanValue());
+    assertEquals(1, json(response).get("executedCommands").intValue());
     assertTrue(device(json(get("/home")), "living-light").get("power").booleanValue());
 
-    post("/commands", light(false));
-    assertEquals(200, post("/sensors/motion", motion("living-motion", true)).statusCode());
+    assertEquals(200, post("/commands", light(false)).statusCode());
+    response = post("/sensors/motion", motion("living-motion", true));
+    assertEquals(200, response.statusCode(), response.body());
+    assertEquals(1, json(response).get("executedCommands").intValue());
+    assertEquals(json(get("/home")), json(response).get("snapshot"));
     assertFalse(device(json(get("/home")), "living-light").get("power").booleanValue());
   }
 
