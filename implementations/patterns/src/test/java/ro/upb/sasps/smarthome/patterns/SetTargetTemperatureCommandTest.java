@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import ro.upb.sasps.smarthome.simulators.VendorAThermostat;
+import ro.upb.sasps.smarthome.simulators.VendorBThermostat;
 
 class SetTargetTemperatureCommandTest {
   @Test
@@ -16,6 +17,17 @@ class SetTargetTemperatureCommandTest {
     assertEquals(200, vendor.readTargetDeciCelsius());
     command.execute();
     assertEquals(221, vendor.readTargetDeciCelsius());
+  }
+
+  @Test
+  void reusesTheSameCommandForVendorBThermostat() {
+    VendorBThermostat vendor = new VendorBThermostat("bedroom-thermostat");
+    Thermostat thermostat = new VendorBThermostatAdapter(vendor);
+    Command command = new SetTargetTemperatureCommand(thermostat, 22.1);
+    assertEquals(68.0, vendor.getTargetFahrenheit());
+    command.execute();
+    assertEquals(71.78, vendor.getTargetFahrenheit(), 1e-9);
+    assertEquals(22.1, thermostat.targetTemperature());
   }
 
   @ParameterizedTest

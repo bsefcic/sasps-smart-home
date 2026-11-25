@@ -161,7 +161,7 @@ components:
       properties:
         devices:
           type: array
-          description: Sorted by id; contains living-light and living-thermostat
+          description: Sorted by id; contains bedroom-thermostat, living-light, and living-thermostat
           items:
             oneOf:
               - {$ref: '#/components/schemas/LightSnapshot'}

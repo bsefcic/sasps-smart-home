@@ -24,7 +24,14 @@ public final class Demo {
     }
     SmartHome home = variant.equals("baseline") ? new BaselineHome() : new PatternsHome();
     CommandResult result = home.execute(new SetLightPower("living-light", true));
-    boolean power = ((LightSnapshot) home.getSnapshot().devices().get(0)).power();
+    boolean power =
+        home.getSnapshot().devices().stream()
+            .filter(LightSnapshot.class::isInstance)
+            .map(LightSnapshot.class::cast)
+            .filter(light -> light.id().equals("living-light"))
+            .findFirst()
+            .orElseThrow()
+            .power();
     // Fixed values only. A general JSON serializer/parser belongs to the CLI story.
     out.printf(
         "{\"result\":{\"ok\":%s},\"snapshot\":{\"devices\":[{\"id\":\"living-light\",\"kind\":\"light\",\"power\":%s}]}}%n",
