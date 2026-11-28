@@ -106,9 +106,34 @@ paths:
               oneOf:
                 - {$ref: '#/components/schemas/SceneRequest'}
                 - {$ref: '#/components/schemas/NestedSceneRequest'}
+            examples:
+              repeatedSubscene:
+                value:
+                  name: evening
+                  commands:
+                    - {type: scene-ref, sceneId: warm}
+                    - {type: set-target-temperature, deviceId: bedroom-thermostat, temperature: 18}
+                    - {type: scene-ref, sceneId: warm}
+                  scenes:
+                    warm:
+                      commands:
+                        - {type: scene-ref, sceneId: bedroom}
+                    bedroom:
+                      commands:
+                        - {type: set-target-temperature, deviceId: bedroom-thermostat, temperature: 22.1}
       responses:
         '200': {$ref: '#/components/responses/Execution'}
-        '400': {$ref: '#/components/responses/Error'}
+        '400':
+          description: Invalid scene, command, local reference, cycle, or expansion limit.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+              example:
+                ok: false
+                error:
+                  code: SCENE_CYCLE
+                  message: 'Scene cycle: loop'
+                  commandPath: [1, 0]
         '404': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
         '415': {$ref: '#/components/responses/Error'}
