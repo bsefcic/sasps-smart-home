@@ -14,4 +14,6 @@ public interface SmartHome {
     return CommandResult.failure(
         ErrorCode.NOT_IMPLEMENTED, "Scene execution is not implemented yet.");
   }
+
+  SceneResult executeNestedScene(NestedSceneRequest scene);
 }

@@ -10,7 +10,9 @@ import ro.upb.sasps.smarthome.contracts.DeviceSnapshot;
 import ro.upb.sasps.smarthome.contracts.HomeCommand;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
 import ro.upb.sasps.smarthome.contracts.LightSnapshot;
+import ro.upb.sasps.smarthome.contracts.NestedSceneRequest;
 import ro.upb.sasps.smarthome.contracts.SceneRequest;
+import ro.upb.sasps.smarthome.contracts.SceneResult;
 import ro.upb.sasps.smarthome.contracts.SetLightPower;
 import ro.upb.sasps.smarthome.contracts.SetTargetTemperature;
 import ro.upb.sasps.smarthome.contracts.SmartHome;
@@ -74,6 +76,18 @@ public final class PatternsHome implements SmartHome {
     }
     new SceneCommand(commands).execute();
     return CommandResult.success();
+  }
+
+  @Override
+  public SceneResult executeNestedScene(NestedSceneRequest scene) {
+    Objects.requireNonNull(scene, "scene");
+    SceneCompiler compiler = new SceneCompiler(scene.scenes(), this::validate, this::buildCommand);
+    CommandResult result = compiler.compile(scene.commands());
+    if (!result.ok()) {
+      return SceneResult.failure(result);
+    }
+    compiler.scene().execute();
+    return SceneResult.success(compiler.commandCount());
   }
 
   private Command buildCommand(HomeCommand command) {
