@@ -1,5 +1,6 @@
 # Cazuri de acceptare pentru S2-03 și S2-05.
-# Rulează-le după implementarea funcției respective, pe aceleași date în ambele variante.
+# Scenele imbricate (S2-03) sunt implementate; cererile de temperatură (S2-05) se rulează după implementarea lor.
+# Folosește aceleași date în ambele variante.
 # Pornește cu sesiuni curate pentru secvența Confort/Eco.
 # Schimbă baseUrl la http://127.0.0.1:8081 pentru baseline.
 @baseUrl = http://127.0.0.1:8080

@@ -3,9 +3,9 @@ info:
   title: SASPS Smart Home API — Sprint 2
   version: 1.2.0
   description: >-
-    Target contract for both variants. The nested form of scene execution is
-    specified for S2-03. Temperature readings and mode selection are specified
-    for S2-05. The packaged /openapi.yaml describes the available API.
+    Target contract for both variants. Nested scene execution (S2-03) is
+    implemented and described in the packaged /openapi.yaml. Temperature
+    readings and mode selection are specified for S2-05.
 servers:
   - url: http://127.0.0.1:8080
     description: patterns
@@ -21,55 +21,7 @@ paths:
   /api/v1/sensors/motion:
     $ref: '../server/src/main/resources/static/openapi.yaml#/paths/~1api~1v1~1sensors~1motion'
   /api/v1/scenes/execute:
-    post:
-      operationId: executeScene
-      description: >-
-        The flat request is already available. S2-03 adds the nested form.
-        Resolve local scene references depth-first and left to right, starting at
-        depth 1. Depth is at most 5 and expansion is at most 50 leaf commands.
-        Reuse is allowed. Active-path cycles, unresolved references and unused
-        definitions are rejected. Validate the entire request before applying any
-        command. The response counts executed leaf commands.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - {$ref: '../server/src/main/resources/static/openapi.yaml#/components/schemas/SceneRequest'}
-                - {$ref: '#/components/schemas/NestedSceneRequest'}
-            examples:
-              repeatedSubscene:
-                value:
-                  name: evening
-                  commands:
-                    - {type: scene-ref, sceneId: warm}
-                    - {type: set-target-temperature, deviceId: bedroom-thermostat, temperature: 18}
-                    - {type: scene-ref, sceneId: warm}
-                  scenes:
-                    warm:
-                      commands:
-                        - {type: scene-ref, sceneId: bedroom}
-                    bedroom:
-                      commands:
-                        - {type: set-target-temperature, deviceId: bedroom-thermostat, temperature: 22.1}
-      responses:
-        '200': {$ref: '../server/src/main/resources/static/openapi.yaml#/components/responses/Execution'}
-        '400':
-          description: Invalid scene, command, local reference, cycle, or expansion limit.
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/SceneError'}
-              example:
-                ok: false
-                error:
-                  code: SCENE_CYCLE
-                  message: 'Scene cycle: loop'
-                  commandPath: [1, 0]
-        '404': {$ref: '#/components/responses/SceneError'}
-        '422': {$ref: '#/components/responses/SceneError'}
-        '415': {$ref: '../server/src/main/resources/static/openapi.yaml#/components/responses/Error'}
-        '500': {$ref: '../server/src/main/resources/static/openapi.yaml#/components/responses/Error'}
+    $ref: '../server/src/main/resources/static/openapi.yaml#/paths/~1api~1v1~1scenes~1execute'
   /api/v1/automation/temperature-mode:
     post:
       operationId: setTemperatureMode
@@ -127,78 +79,7 @@ paths:
         '422': {$ref: '../server/src/main/resources/static/openapi.yaml#/components/responses/Error'}
         '500': {$ref: '../server/src/main/resources/static/openapi.yaml#/components/responses/Error'}
 components:
-  responses:
-    SceneError:
-      description: Validation failed and the scene had no effects.
-      content:
-        application/json:
-          schema: {$ref: '#/components/schemas/SceneError'}
   schemas:
-    NestedSceneRequest:
-      type: object
-      additionalProperties: false
-      required: [name, commands, scenes]
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 64
-          pattern: '\S'
-          description: Nonblank, at most 64 UTF-16 code units, kept unchanged.
-        commands: {$ref: '#/components/schemas/SceneEntries'}
-        scenes:
-          type: object
-          maxProperties: 50
-          description: Local definitions. IDs match ^[a-z][a-z0-9-]{0,63}$.
-          additionalProperties:
-            type: object
-            additionalProperties: false
-            required: [commands]
-            properties:
-              commands: {$ref: '#/components/schemas/SceneEntries'}
-    SceneEntries:
-      type: array
-      minItems: 1
-      maxItems: 50
-      items:
-        oneOf:
-          - {$ref: '../server/src/main/resources/static/openapi.yaml#/components/schemas/Command'}
-          - {$ref: '#/components/schemas/SceneReference'}
-    SceneReference:
-      type: object
-      additionalProperties: false
-      required: [type, sceneId]
-      properties:
-        type: {type: string, enum: [scene-ref]}
-        sceneId: {$ref: '../server/src/main/resources/static/openapi.yaml#/components/schemas/DeviceId'}
-    SceneError:
-      type: object
-      additionalProperties: false
-      required: [ok, error]
-      properties:
-        ok: {type: boolean, enum: [false]}
-        error:
-          type: object
-          additionalProperties: false
-          required: [code, message]
-          not:
-            required: [commandIndex, commandPath]
-          properties:
-            code:
-              type: string
-              enum: [INVALID_REQUEST, INVALID_SCENE, INVALID_COMMAND, UNKNOWN_SCENE, SCENE_CYCLE, SCENE_LIMIT_EXCEEDED, UNKNOWN_DEVICE, INVALID_TEMPERATURE, INCOMPATIBLE_DEVICE]
-            message: {type: string}
-            commandIndex:
-              type: integer
-              minimum: 0
-              maximum: 49
-              description: Zero-based index for an item error in a flat scene.
-            commandPath:
-              type: array
-              minItems: 1
-              maxItems: 5
-              description: Zero-based indices from the root commands list to the rejected item.
-              items: {type: integer, minimum: 0, maximum: 49}
     TemperatureMode:
       type: string
       enum: [comfort, eco]
