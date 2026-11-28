@@ -23,6 +23,18 @@ class SceneCommandTest {
   }
 
   @Test
+  void nestedScenesRunDepthFirstAndCanReuseTheSameChild() {
+    List<Integer> effects = new ArrayList<>();
+    SceneCommand inner = new SceneCommand(List.of(() -> effects.add(2), () -> effects.add(3)));
+    SceneCommand scene =
+        new SceneCommand(List.of(inner, () -> effects.add(1), new SceneCommand(List.of(inner))));
+
+    assertEquals(List.of(), effects);
+    scene.execute();
+    assertEquals(List.of(2, 3, 1, 2, 3), effects);
+  }
+
+  @Test
   void lastSettingOfTheSameDeviceWins() {
     VendorALight vendor = new VendorALight("living-light");
     Light light = new VendorALightAdapter(vendor);

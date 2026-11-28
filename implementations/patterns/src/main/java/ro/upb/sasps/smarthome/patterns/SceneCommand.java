@@ -3,8 +3,10 @@ package ro.upb.sasps.smarthome.patterns;
 import java.util.List;
 
 /**
- * Executes commands in their supplied order. The engine must validate the entire scene before
- * constructing and executing this command; execution does not provide rollback.
+ * Composite: executes its children in their supplied order. A child is a leaf command or another
+ * SceneCommand, so a nested scene runs depth-first through the same execute operation. The engine
+ * must validate the entire scene before constructing and executing this command; execution does not
+ * provide rollback.
  */
 public final class SceneCommand implements Command {
   private final List<Command> commands;
