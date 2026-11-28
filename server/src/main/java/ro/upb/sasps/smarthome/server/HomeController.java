@@ -42,6 +42,9 @@ public final class HomeController {
 
   @PostMapping(value = "/scenes/execute", consumes = "application/json")
   public ExecutionResponse executeScene(@RequestBody JsonNode body) {
+    if (mapper.isNestedScene(body)) {
+      return session.executeNestedScene(mapper.nestedScene(body));
+    }
     return session.executeScene(mapper.scene(body));
   }
 }

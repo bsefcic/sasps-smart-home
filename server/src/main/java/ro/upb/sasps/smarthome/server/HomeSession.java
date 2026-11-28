@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
 import ro.upb.sasps.smarthome.contracts.HomeCommand;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
+import ro.upb.sasps.smarthome.contracts.NestedSceneRequest;
 import ro.upb.sasps.smarthome.contracts.SceneRequest;
+import ro.upb.sasps.smarthome.contracts.SceneResult;
 import ro.upb.sasps.smarthome.contracts.SmartHome;
 
 /** Neutral synchronization: one home per process, same policy for both variants. */
@@ -30,6 +32,12 @@ public final class HomeSession {
     return new ExecutionResponse(true, scene.commands().size(), home.getSnapshot());
   }
 
+  public synchronized ExecutionResponse executeNestedScene(NestedSceneRequest scene) {
+    SceneResult result = home.executeNestedScene(scene);
+    requireSuccess(result.result());
+    return new ExecutionResponse(true, result.executedCommands(), home.getSnapshot());
+  }
+
   public synchronized ExecutionResponse reportMotion(MotionReading reading) {
     requireSuccess(home.reportMotion(reading.sensorId(), reading.motion()));
     return new ExecutionResponse(true, 1, home.getSnapshot());
@@ -37,7 +45,8 @@ public final class HomeSession {
 
   private static void requireSuccess(CommandResult result) {
     if (!result.ok()) {
-      throw new ApiException(result.code(), result.message(), result.commandIndex());
+      throw new ApiException(
+          result.code(), result.message(), result.commandIndex(), result.commandPath());
     }
   }
 }
