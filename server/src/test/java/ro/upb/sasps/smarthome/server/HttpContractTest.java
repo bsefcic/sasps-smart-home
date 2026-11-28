@@ -18,10 +18,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -354,6 +357,226 @@ abstract class HttpContractTest {
     assertError(response, 422, "INVALID_TEMPERATURE");
     assertEquals(1, json(response).get("error").get("commandIndex").intValue());
     assertEquals(before, get("/home").body());
+  }
+
+  @Test
+  void executesNestedScenesAndCountsEveryExpandedCommand() throws Exception {
+    String payload =
+        """
+        {"name":"evening","commands":[
+          {"type":"scene-ref","sceneId":"warm"},
+          {"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":18},
+          {"type":"scene-ref","sceneId":"warm"}],
+         "scenes":{
+          "warm":{"commands":[{"type":"scene-ref","sceneId":"bedroom"}]},
+          "bedroom":{"commands":[
+            {"type":"set-target-temperature","deviceId":"bedroom-thermostat","temperature":22.1}]}}}
+        """;
+    HttpResponse<String> response = post("/scenes/execute", payload);
+
+    assertEquals(200, response.statusCode(), response.body());
+    assertTrue(json(response).get("ok").booleanValue());
+    assertEquals(3, json(response).get("executedCommands").intValue());
+    assertEquals(json(get("/home")), json(response).get("snapshot"));
+    assertEquals(
+        22.1,
+        device(json(response).get("snapshot"), "bedroom-thermostat")
+            .get("targetTemperature")
+            .doubleValue());
+  }
+
+  static Stream<Arguments> invalidNestedScenes() {
+    String light = "{\"type\":\"set-light-power\",\"deviceId\":\"living-light\",\"power\":true}";
+    return Stream.of(
+        Arguments.of(
+            "{\"name\":\"m\",\"commands\":["
+                + light
+                + ",{\"type\":\"scene-ref\",\"sceneId\":\"unknown\"}],\"scenes\":{}}",
+            400,
+            "UNKNOWN_SCENE",
+            List.of(1)),
+        Arguments.of(
+            """
+            {"name":"c","commands":[%s,{"type":"scene-ref","sceneId":"loop"}],
+             "scenes":{"loop":{"commands":[{"type":"scene-ref","sceneId":"loop"}]}}}
+            """
+                .formatted(light),
+            400,
+            "SCENE_CYCLE",
+            List.of(1, 0)),
+        Arguments.of(
+            """
+            {"name":"c","commands":[{"type":"scene-ref","sceneId":"first"}],
+             "scenes":{"first":{"commands":[{"type":"scene-ref","sceneId":"second"}]},
+                       "second":{"commands":[{"type":"scene-ref","sceneId":"first"}]}}}
+            """,
+            400,
+            "SCENE_CYCLE",
+            List.of(0, 0, 0)),
+        Arguments.of(
+            """
+            {"name":"d","commands":[{"type":"scene-ref","sceneId":"a"}],
+             "scenes":{"a":{"commands":[{"type":"scene-ref","sceneId":"b"}]},
+                       "b":{"commands":[{"type":"scene-ref","sceneId":"c"}]},
+                       "c":{"commands":[{"type":"scene-ref","sceneId":"d"}]},
+                       "d":{"commands":[{"type":"scene-ref","sceneId":"e"}]},
+                       "e":{"commands":[%s]}}}
+            """
+                .formatted(light),
+            400,
+            "SCENE_LIMIT_EXCEEDED",
+            List.of(0, 0, 0, 0, 0)),
+        Arguments.of(
+            """
+            {"name":"t","commands":[{"type":"scene-ref","sceneId":"a"},
+               {"type":"scene-ref","sceneId":"a"},{"type":"scene-ref","sceneId":"a"}],
+             "scenes":{
+               "a":{"commands":[{"type":"scene-ref","sceneId":"b"},
+                 {"type":"scene-ref","sceneId":"b"},{"type":"scene-ref","sceneId":"b"}]},
+               "b":{"commands":[{"type":"scene-ref","sceneId":"c"},
+                 {"type":"scene-ref","sceneId":"c"},{"type":"scene-ref","sceneId":"c"}]},
+               "c":{"commands":[%s,%s]}}}
+            """
+                .formatted(light, light),
+            400,
+            "SCENE_LIMIT_EXCEEDED",
+            List.of(2, 2, 1, 0)),
+        Arguments.of(
+            """
+            {"name":"i","commands":[%s,{"type":"scene-ref","sceneId":"warm"}],
+             "scenes":{"warm":{"commands":[{"type":"scene-ref","sceneId":"bedroom"}]},
+               "bedroom":{"commands":[{"type":"set-target-temperature",
+                 "deviceId":"bedroom-thermostat","temperature":22.25}]}}}
+            """
+                .formatted(light),
+            422,
+            "INVALID_TEMPERATURE",
+            List.of(1, 0, 0)),
+        Arguments.of(
+            """
+            {"name":"u","commands":[{"type":"scene-ref","sceneId":"warm"}],
+             "scenes":{"warm":{"commands":[%s,
+               {"type":"set-light-power","deviceId":"missing","power":true}]}}}
+            """
+                .formatted(light),
+            404,
+            "UNKNOWN_DEVICE",
+            List.of(0, 1)),
+        Arguments.of(
+            """
+            {"name":"p","commands":[{"type":"scene-ref","sceneId":"missing"},
+               {"type":"set-target-temperature","deviceId":"living-thermostat","temperature":99}],
+             "scenes":{}}
+            """,
+            400,
+            "UNKNOWN_SCENE",
+            List.of(0)),
+        Arguments.of(
+            """
+            {"name":"r","commands":[%s,{"type":"scene-ref","sceneId":"Bad id"}],"scenes":{}}
+            """
+                .formatted(light),
+            400,
+            "INVALID_REQUEST",
+            List.of(1)),
+        Arguments.of(
+            """
+            {"name":"r","commands":[{"type":"scene-ref","sceneId":"warm","extra":1}],
+             "scenes":{"warm":{"commands":[%s]}}}
+            """
+                .formatted(light),
+            400,
+            "INVALID_REQUEST",
+            List.of(0)),
+        Arguments.of(
+            """
+            {"name":"r","commands":[{"type":"scene-ref","sceneId":"warm"}],
+             "scenes":{"warm":{"commands":[null]}}}
+            """,
+            400,
+            "INVALID_REQUEST",
+            List.of(0, 0)),
+        Arguments.of(
+            """
+            {"name":"r","commands":[{"type":"scene-ref","sceneId":"warm"}],
+             "scenes":{"warm":{"commands":[{"type":"open-door","deviceId":"living-light"}]}}}
+            """,
+            400,
+            "INVALID_COMMAND",
+            List.of(0, 0)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidNestedScenes")
+  void rejectsNestedScenesWithTheirCommandPathAndNoEffects(
+      String payload, int status, String code, List<Integer> commandPath) throws Exception {
+    String before = get("/home").body();
+    HttpResponse<String> response = post("/scenes/execute", payload);
+
+    assertError(response, status, code);
+    JsonNode error = json(response).get("error");
+    assertEquals(mapper.valueToTree(commandPath), error.get("commandPath"));
+    assertFalse(error.has("commandIndex"));
+    assertFalse(json(response).has("snapshot"));
+    assertFalse(json(response).has("executedCommands"));
+    assertEquals(before, get("/home").body());
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "{'name':'s','commands':[%s],'scenes':null} | 400 | INVALID_REQUEST",
+        "{'name':'s','commands':[%s],'scenes':[]} | 400 | INVALID_REQUEST",
+        "{'name':'s','commands':[%s],'scenes':{},'extra':1} | 400 | INVALID_REQUEST",
+        "{'name':'s','commands':[%s],'scenes':{'Bad':{'commands':[%s]}}} | 400 | INVALID_REQUEST",
+        "{'name':'s','commands':[%s],'scenes':{'warm':{'commands':[%s],'x':1}}} | 400 | INVALID_REQUEST",
+        "{'name':'s','commands':[%s],'scenes':{'warm':[%s]}} | 400 | INVALID_REQUEST",
+        "{'name':' ','commands':[%s],'scenes':{}} | 400 | INVALID_SCENE",
+        "{'name':'s','commands':[],'scenes':{}} | 400 | INVALID_SCENE",
+        "{'name':'s','commands':[%s],'scenes':{'warm':{'commands':[]}}} | 400 | INVALID_SCENE",
+        "{'name':'s','commands':[%s],'scenes':{'warm':{'commands':{}}}} | 400 | INVALID_SCENE",
+        "{'name':'s','commands':[%s],'scenes':{'unused':{'commands':[%s]}}} | 400 | INVALID_SCENE"
+      })
+  void rejectsInvalidNestedStructureWithoutALocation(String template, int status, String code)
+      throws Exception {
+    String light = light(true);
+    String before = get("/home").body();
+    HttpResponse<String> response =
+        post("/scenes/execute", template.replace('\'', '"').replace("%s", light));
+
+    assertError(response, status, code);
+    assertFalse(json(response).get("error").has("commandPath"));
+    assertFalse(json(response).get("error").has("commandIndex"));
+    assertEquals(before, get("/home").body());
+  }
+
+  @Test
+  void rejectsFiftyOneDefinitionsAndKeepsReferencesOutOfFlatScenes() throws Exception {
+    StringBuilder scenes = new StringBuilder();
+    StringBuilder refs = new StringBuilder();
+    for (int index = 0; index < 51; index++) {
+      scenes.append(index == 0 ? "" : ",").append("\"s").append(index).append("\":{\"commands\":[");
+      scenes.append(light(true)).append("]}");
+      if (index < 50) {
+        refs.append(index == 0 ? "" : ",").append("{\"type\":\"scene-ref\",\"sceneId\":\"s");
+        refs.append(index).append("\"}");
+      }
+    }
+    HttpResponse<String> response =
+        post(
+            "/scenes/execute",
+            "{\"name\":\"many\",\"commands\":[" + refs + "],\"scenes\":{" + scenes + "}}");
+    assertError(response, 400, "INVALID_SCENE");
+    assertFalse(json(response).get("error").has("commandPath"));
+
+    response =
+        post(
+            "/scenes/execute",
+            "{\"name\":\"flat\",\"commands\":[{\"type\":\"scene-ref\",\"sceneId\":\"warm\"}]}");
+    assertError(response, 400, "INVALID_COMMAND");
+    assertEquals(0, json(response).get("error").get("commandIndex").intValue());
+    assertFalse(json(response).get("error").has("commandPath"));
   }
 
   @Test

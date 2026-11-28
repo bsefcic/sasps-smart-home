@@ -1,5 +1,6 @@
 package ro.upb.sasps.smarthome.server;
 
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,8 @@ import ro.upb.sasps.smarthome.contracts.ErrorCode;
 public final class ApiErrorHandler {
   private static final Logger LOG = LoggerFactory.getLogger(ApiErrorHandler.class);
 
-  public record ErrorDetail(ErrorCode code, String message, Integer commandIndex) {}
+  public record ErrorDetail(
+      ErrorCode code, String message, Integer commandIndex, List<Integer> commandPath) {}
 
   public record ErrorResponse(boolean ok, ErrorDetail error) {}
 
@@ -29,7 +31,15 @@ public final class ApiErrorHandler {
           case INTERNAL_ERROR -> 500;
           default -> 400;
         };
-    return error(status, exception.code(), exception.getMessage(), exception.commandIndex());
+    return ResponseEntity.status(status)
+        .body(
+            new ErrorResponse(
+                false,
+                new ErrorDetail(
+                    exception.code(),
+                    exception.getMessage(),
+                    exception.commandIndex(),
+                    exception.commandPath())));
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -61,6 +71,6 @@ public final class ApiErrorHandler {
   private static ResponseEntity<ErrorResponse> error(
       int status, ErrorCode code, String message, Integer index) {
     return ResponseEntity.status(status)
-        .body(new ErrorResponse(false, new ErrorDetail(code, message, index)));
+        .body(new ErrorResponse(false, new ErrorDetail(code, message, index, null)));
   }
 }

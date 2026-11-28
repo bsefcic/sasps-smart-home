@@ -45,12 +45,14 @@ Nu există suite funcționale divergente pentru cele două engines.
 | Input invalid într-o scenă, înaintea execuției | `rejectsMissingSceneCommandsAndNullElements` | Constructorul respinge lista invalidă | `validatesEverySceneInputBeforeCallingEngine`: 422, `commandIndex=1`, fără modificări |
 | Nume null/blank, păstrarea spațiilor și limita de 64 unități UTF-16 | `rejectsMissingOrBlankSceneNames`, `sceneNamesPreserveWhitespaceAndCountUtf16Units` | Validare în `SceneRequest` | Matricea exhaustivă a numelor este verificată la nivel de contract |
 | Liste copiate defensiv și nemodificabile | `snapshotsDefensivelyCopyTheirDeviceList`, `scenesDefensivelyCopyAndHaveFixedBounds` | `protectsSnapshotsAndInstances`, `controlsTemperatureAndPreservesSnapshots`: snapshot vechi stabil și case independente | HTTP verifică snapshot-ul rezultat și starea ulterioară; imutabilitatea obiectelor Java este verificată în contracte/core |
+| Scene imbricate: ordine în adâncime, reutilizare, număr de comenzi executate, limitele 5/50 acceptate | `NestedSceneContractTest` | `NestedSceneAcceptanceTest`: `executesTheContractExample`, `executesDepthFirstInDefinedOrder`, `acceptsTheLimits` | `executesNestedScenesAndCountsEveryExpandedCommand` |
+| Scene imbricate respinse: referință lipsă, cicluri directe/indirecte, adâncime 6, 51 de comenzi expandate, comandă invalidă sau dispozitiv invalid în subscenă, definiție inaccesibilă, ordinea etapelor de validare, fără efecte | `NestedSceneContractTest`: `commandPath`, `InvalidSceneEntry` | `rejectsInvalidScenesWithoutEffects`, cu rezultate așteptate explicite | `rejectsNestedScenesWithTheirCommandPathAndNoEffects`, `rejectsInvalidNestedStructureWithoutALocation`, `rejectsFiftyOneDefinitionsAndKeepsReferencesOutOfFlatScenes` |
 | Acces concurent și snapshot aferent propriei comenzi | — | Engines sunt folosite serial | `serializesConcurrentCommandsWithTheirOwnResultSnapshot`: lock-ul comun din server |
 
 Clasele de contract sunt în `shared/contracts/src/test/java`, cele core în
 `acceptance-tests/src/test/java`, iar cele HTTP în `server/src/test/java`.
-Testele unitare pentru simulator, Adapter, Command, SceneCommand și Household/Proxy
-rămân în modulele lor. Matricea de mai sus descrie verificările comune ale contractului S1;
+Testele unitare pentru simulator, Adapter, Command, SceneCommand, SceneCompiler și Household/Proxy
+rămân în modulele lor. Matricea de mai sus descrie verificările comune ale contractului S1 și ale scenelor imbricate din S2-03;
 nu pretinde că orice regulă este repetată la toate nivelurile.
 
 ## Guard pentru dependențe directe

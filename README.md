@@ -62,6 +62,8 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/commands -Conte
 
 **S1-04 și S1-05 implementate:** control manual și scenarii plate de 1–50 comenzi în ambele engines. Scenariile se validează integral înainte de execuție; ID-urile necunoscute sau incompatibile nu lasă efecte parțiale, iar eroarea include commandIndex. Ordinea este respectată; ultima setare a unui dispozitiv rămâne în stare.
 
+**S2-03 implementat:** scene imbricate cu definiții locale în `scenes` și referințe `scene-ref`, în ambele engines. Parcurgerea este în adâncime, de la stânga la dreapta; o subscenă refolosită se execută la fiecare referință. Referințele lipsă, ciclurile, adâncimea peste 5, peste 50 de comenzi expandate, definițiile inaccesibile și comenzile invalide din subscene sunt respinse fără efecte, cu `commandPath`. Vezi [contractul S2](docs/contracts-sprint-2.md#scene-imbricate).
+
 React nu este implementat și nu este necesar pentru S1. Îl putem conecta ulterior la API; origin-urile implicite permise sunt http://localhost:5173 și http://localhost:3000. Nu sunt necesare hardware, baze de date, Docker sau chei API.
 
 ## Module

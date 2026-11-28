@@ -19,11 +19,11 @@ Scopul SASPS este să comparăm costul și beneficiile acestor alegeri: cât cod
 | Aplicație | Java 21, Spring Boot, API REST și OpenAPI static | Păstrăm aceeași infrastructură | React este opțional |
 | Dispozitive | Bec și termostat Vendor A, 20.0°C inițial | Bec și termostat Vendor A; temperatură în Celsius | Al doilea producător în S2 |
 | Comenzi | Controlul becului și termostatului în ambele engines | Control identic pentru ambele dispozitive | Extensii rezervate evaluării |
-| Scenarii | Scenarii plate, prevalidate integral, executate în ordine | Listă plată de 1–50 comenzi, validată integral înainte de execuție | Scenarii imbricate în S2 |
-| Patterns | Command și Adapter pentru bec și termostat; SceneCommand pentru scenarii | Command, Adapter și compunere prin SceneCommand | Observer și Strategy în S2 |
+| Scenarii | Scenarii plate și imbricate (S2-03), prevalidate integral, executate în ordine | Listă plată de 1–50 comenzi, validată integral înainte de execuție | — |
+| Patterns | Command și Adapter pentru bec și termostat; SceneCommand (Composite) pentru scenarii plate și imbricate | Command, Adapter și compunere prin SceneCommand | Observer și Strategy în S2 |
 | Evaluare | Teste comune core și HTTP; CI | Contor LOC, măsurători inițiale și demo | Pilot AI în S2, evaluare finală în S3 |
 
-**Controlul manual al termostatului este implementat (S1-04).** Baseline folosește direct VendorAThermostat, iar patterns folosește SetTargetTemperatureCommand și VendorAThermostatAdapter. Scenariile sunt implementate (S1-05): baseline validează integral și apoi execută prin buclă; patterns validează și construiește comenzile înainte de delegarea către SceneCommand. Diagramele marcate „țintă S1” descriu implementarea de realizat, nu cod deja livrat.
+**Controlul manual al termostatului este implementat (S1-04).** Baseline folosește direct VendorAThermostat, iar patterns folosește SetTargetTemperatureCommand și VendorAThermostatAdapter. Scenariile sunt implementate (S1-05): baseline validează integral și apoi execută prin buclă; patterns validează și construiește comenzile înainte de delegarea către SceneCommand. Scenele imbricate sunt implementate (S2-03): baseline expandează recursiv definițiile într-o listă plată, o validează și apoi o execută; patterns construiește prin `SceneCompiler` un arbore de `SceneCommand`, cu un nod pentru fiecare referință. Diagramele marcate „țintă S1” descriu implementarea de realizat, nu cod deja livrat.
 
 Planul S2 este direcția de extindere din [scope](scope.md). API-urile noi pentru senzori, automatizări și nesting se fixează la planificarea S2. Nu le inventăm în stories S1. Acestea sunt decizii ale echipei, nu cerințe suplimentare atribuite profesorului.
 
@@ -168,11 +168,11 @@ Diagrama omite intenționat executeScene și snapshots pentru a arăta doar rela
 | --- | --- | --- | --- |
 | Command | SetLightPowerCommand există; SetTargetTemperatureCommand în #5 | O acțiune devine obiect executabil, utilizabil și de scenarii | Ramificație pe tipul cererii și apel direct |
 | Adapter | VendorALightAdapter și VendorAThermostatAdapter există; termostatul se conectează la engine în #5 | Ascunde enum-ul pentru bec și unitățile de temperatură ale producătorului | Conversii și apeluri vendor în controlul direct |
-| Composite | SceneCommand cu o listă de Command, țintă #6 | Permite executarea unei secvențe prin aceeași operație execute | Buclă peste lista de cereri, după prevalidare |
+| Composite | SceneCommand cu o listă de Command: frunze sau alte SceneCommand (S2-03) | Execută o scenă și subscenele ei prin aceeași operație execute | Expandare recursivă într-o listă plată, apoi buclă după prevalidare |
 | Observer | Evenimente de senzori și consumatori, plan S2 | Senzorul poate notifica automatizări fără să le cunoască pe fiecare | Actualizare și invocare centralizată |
 | Strategy | Două politici de temperatură, plan S2 | Alegerea algoritmului fără a rescrie executorul de automatizări | Alegerea politicii prin ramificații |
 
-SceneCommand este pasul de compunere S1: are numai comenzi-frunză. Nesting-ul și detectarea ciclurilor sunt extensii S2; nu construim anticipat un arbore de scenarii.
+În S1, SceneCommand avea numai comenzi-frunză. În S2-03, `SceneCompiler` rezolvă referințele locale în ordinea de execuție, verifică ciclurile pe traseul activ, adâncimea și numărul de comenzi expandate, apoi accesibilitatea definițiilor și inventarul. O subscenă refolosită se compilează din nou la fiecare referință, pentru că adâncimea și calea erorii depind de poziție. Serverul validează doar forma JSON; un element invalid ajunge în engine ca `InvalidSceneEntry`, ca eroarea lui să fie raportată în ordinea de execuție, cu `commandPath`.
 
 `VendorALightAdapter` ascunde enum-ul `VendorALight.Power`: aplicația folosește un boolean. `VendorAThermostatAdapter` implementează interfața `Thermostat` în Celsius și ascunde unitățile Vendor A: 22.1°C devin 221 deci-grade, iar citirea împarte valoarea vendor la 10.0. `VendorBThermostatAdapter` adaptează la aceeași interfață `Thermostat` simulatorul `VendorBThermostat` (stare nativă în grade Fahrenheit, 41.0–95.0°F, inițial 68.0°F = 20.0°C, metode `serialId()`, `applyTargetFahrenheit(double)`, `getTargetFahrenheit()`), permițând refolosirea `SetTargetTemperatureCommand` fără modificarea fluxului din `PatternsHome`; în `BaselineHome`, `VendorBThermostat` este apelat direct. Validarea prin `ContractChecks.requireTemperature` precedă conversia; o temperatură invalidă, inclusiv 22.25, NaN sau Infinity, este respinsă fără schimbarea stării.
 

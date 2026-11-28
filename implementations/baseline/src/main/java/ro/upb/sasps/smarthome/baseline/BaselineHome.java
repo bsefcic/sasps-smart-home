@@ -2,15 +2,24 @@ package ro.upb.sasps.smarthome.baseline;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import ro.upb.sasps.smarthome.contracts.CommandResult;
+import ro.upb.sasps.smarthome.contracts.ContractChecks;
 import ro.upb.sasps.smarthome.contracts.DeviceSnapshot;
 import ro.upb.sasps.smarthome.contracts.HomeCommand;
 import ro.upb.sasps.smarthome.contracts.HomeSnapshot;
+import ro.upb.sasps.smarthome.contracts.InvalidSceneEntry;
 import ro.upb.sasps.smarthome.contracts.LightSnapshot;
+import ro.upb.sasps.smarthome.contracts.NestedSceneRequest;
+import ro.upb.sasps.smarthome.contracts.SceneEntry;
+import ro.upb.sasps.smarthome.contracts.SceneReference;
 import ro.upb.sasps.smarthome.contracts.SceneRequest;
+import ro.upb.sasps.smarthome.contracts.SceneResult;
 import ro.upb.sasps.smarthome.contracts.SetLightPower;
 import ro.upb.sasps.smarthome.contracts.SetTargetTemperature;
 import ro.upb.sasps.smarthome.contracts.SmartHome;
@@ -73,6 +82,77 @@ public final class BaselineHome implements SmartHome {
     }
     for (HomeCommand command : scene.commands()) {
       apply(command);
+    }
+    return CommandResult.success();
+  }
+
+  @Override
+  public SceneResult executeNestedScene(NestedSceneRequest scene) {
+    Objects.requireNonNull(scene, "scene");
+    Expansion expansion = new Expansion(new ArrayList<>(), new ArrayList<>(), new HashSet<>());
+    CommandResult result =
+        expand(scene.scenes(), scene.commands(), List.of(), new HashSet<>(), expansion);
+    if (!result.ok()) {
+      return SceneResult.failure(result);
+    }
+    for (String id : scene.scenes().keySet()) {
+      if (!expansion.reached().contains(id)) {
+        return SceneResult.failure(CommandResult.unreachableScene(id));
+      }
+    }
+    for (int index = 0; index < expansion.commands().size(); index++) {
+      result = validate(expansion.commands().get(index));
+      if (!result.ok()) {
+        return SceneResult.failure(result.atPath(expansion.paths().get(index)));
+      }
+    }
+    for (HomeCommand command : expansion.commands()) {
+      apply(command);
+    }
+    return SceneResult.success(expansion.commands().size());
+  }
+
+  private record Expansion(
+      List<HomeCommand> commands, List<List<Integer>> paths, Set<String> reached) {}
+
+  private CommandResult expand(
+      Map<String, List<SceneEntry>> scenes,
+      List<SceneEntry> entries,
+      List<Integer> path,
+      Set<String> active,
+      Expansion expansion) {
+    for (int index = 0; index < entries.size(); index++) {
+      List<Integer> entryPath = new ArrayList<>(path);
+      entryPath.add(index);
+      SceneEntry entry = entries.get(index);
+      if (entry instanceof InvalidSceneEntry invalid) {
+        return invalid.toResult().atPath(entryPath);
+      }
+      if (entry instanceof HomeCommand command) {
+        if (expansion.commands().size() == ContractChecks.MAX_SCENE_COMMANDS) {
+          return CommandResult.sceneSizeExceeded().atPath(entryPath);
+        }
+        expansion.commands().add(command);
+        expansion.paths().add(entryPath);
+        continue;
+      }
+      String id = ((SceneReference) entry).sceneId();
+      if (!scenes.containsKey(id)) {
+        return CommandResult.unknownScene(id).atPath(entryPath);
+      }
+      if (active.contains(id)) {
+        return CommandResult.sceneCycle(id).atPath(entryPath);
+      }
+      if (entryPath.size() == ContractChecks.MAX_SCENE_DEPTH) {
+        return CommandResult.sceneDepthExceeded().atPath(entryPath);
+      }
+      expansion.reached().add(id);
+      active.add(id);
+      CommandResult result = expand(scenes, scenes.get(id), entryPath, active, expansion);
+      active.remove(id);
+      if (!result.ok()) {
+        return result;
+      }
     }
     return CommandResult.success();
   }
