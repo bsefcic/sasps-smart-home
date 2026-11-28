@@ -6,10 +6,10 @@ Baseline și Patterns acceptă aceleași cereri și întorc aceleași răspunsur
 | --- | --- | --- |
 | Termostat Vendor B | Implementat în PR #27 | [Contract v1](contracts-v1.md#inventarul-inițial-și-homesnapshot) |
 | Citiri de mișcare | Implementat în PR #25 | [Contract v1](contracts-v1.md#citire-de-mișcare) |
-| Scene imbricate | Contract pentru implementarea S2-03 | [Scene imbricate](#scene-imbricate) |
+| Scene imbricate | Implementat în S2-03 | [Scene imbricate](#scene-imbricate) |
 | Citiri de temperatură și moduri Confort/Eco | Contract pentru implementarea S2-05 | [Automatizarea temperaturii](#automatizarea-temperaturii) |
 
-[`/openapi.yaml`](../server/src/main/resources/static/openapi.yaml) descrie API-ul disponibil. [OpenAPI pentru Sprintul 2](openapi-sprint-2.yaml) include și operațiile din S2-03 și S2-05. [Cererile pentru API-ul disponibil](http/smart-home.http) și [cererile pentru S2-03 și S2-05](http/smart-home-sprint-2.http) se folosesc cu aceleași date pentru ambele variante.
+[`/openapi.yaml`](../server/src/main/resources/static/openapi.yaml) descrie API-ul disponibil, inclusiv scenele imbricate. [OpenAPI pentru Sprintul 2](openapi-sprint-2.yaml) include și operațiile din S2-05. [Cererile pentru API-ul disponibil](http/smart-home.http) și [cererile pentru S2-03 și S2-05](http/smart-home-sprint-2.http) se folosesc cu aceleași date pentru ambele variante.
 
 ## Vendor B
 
